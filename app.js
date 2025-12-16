@@ -23,12 +23,10 @@ const el = {
   answerText: document.getElementById("answerText"),
   sourceText: document.getElementById("sourceText"),
 
-  btnFlip: document.getElementById("btnFlip"),
   ratingRow: document.getElementById("ratingRow"),
   btnRate0: document.getElementById("btnRate0"),
   btnRate1: document.getElementById("btnRate1"),
   btnRate2: document.getElementById("btnRate2"),
-  btnSkip: document.getElementById("btnSkip"),
 };
 
 /** @typedef {{ file: string, page?: number, pages?: number[], note?: string }} Source */
@@ -214,7 +212,6 @@ function setCurrentCard(card) {
   state.showingAnswer = false;
   el.flashcard.classList.remove("is-flipped");
   el.ratingRow.hidden = true;
-  el.btnFlip.disabled = false;
 
   el.questionText.textContent = card?.question ?? "";
   el.answerText.textContent = card?.answer ?? "";
@@ -378,10 +375,6 @@ el.btnStart.addEventListener("click", () => {
 
 el.btnReset.addEventListener("click", resetProgress);
 
-el.btnFlip.addEventListener("click", () => {
-  flipCard();
-});
-
 el.flashcard.addEventListener("click", () => flipCard());
 
 el.flashcard.addEventListener("keydown", (e) => {
@@ -394,8 +387,6 @@ el.flashcard.addEventListener("keydown", (e) => {
 el.btnRate0.addEventListener("click", () => applyRating(0));
 el.btnRate1.addEventListener("click", () => applyRating(1));
 el.btnRate2.addEventListener("click", () => applyRating(2));
-
-el.btnSkip.addEventListener("click", () => nextCard());
 
 // Init
 showScreen("start");
