@@ -126,7 +126,7 @@ body {
 }
 
 .screen { display: block; }
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 #screenStudy {
   min-height: calc(100dvh - 64px);
