@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learning Cards</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-title">Learning Cards</div>
+    <button id="btnHome" class="btn btn-ghost" type="button" aria-label="Vissza a kezdőképernyőre">Kezdőlap</button>
+  </header>
+
+  <main class="app" id="app">
+    <section id="screenStart" class="screen" aria-label="Kezdőképernyő">
+      <h1 class="h1">Gyakorlás</h1>
+      <p class="muted">Válaszd ki, mit szeretnél gyakorolni, majd indulhat a kártyázás.</p>
+
+      <div class="card panel">
+        <div class="field">
+          <div class="label">Kérdéssor</div>
+          <label class="radio">
+            <input type="radio" name="deck" value="beugro" checked />
+            <span>Beugró kérdések</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="deck" value="tetelek" />
+            <span>Tétel kérdések</span>
+          </label>
+        </div>
+
+        <div class="row">
+          <button id="btnStart" class="btn btn-primary" type="button">Indítás</button>
+          <button id="btnReset" class="btn" type="button">Haladás törlése</button>
+        </div>
+
+        <p class="muted small" id="startError" role="status" aria-live="polite"></p>
+      </div>
+
+      <details class="help">
+        <summary>Ha nem tölt be a kérdéssor…</summary>
+        <p class="muted">
+          Ha közvetlenül fájlként nyitod meg az oldalt, a böngésző néha blokkolhatja a JSON betöltését.
+          Ilyenkor indíts egy egyszerű helyi szervert, majd azon keresztül nyisd meg:
+        </p>
+        <pre class="code">cd learningcards
+python -m http.server 5173</pre>
+        <p class="muted">Ezután: <span class="code-inline">http://localhost:5173</span></p>
+      </details>
+    </section>
+
+    <section id="screenStudy" class="screen hidden" aria-label="Kártyázás">
+      <div class="topline">
+        <div id="deckLabel" class="pill">–</div>
+        <div id="cardLabel" class="muted small" aria-live="polite">–</div>
+      </div>
+
+      <article id="flashcard" class="flashcard" tabindex="0" role="button" aria-label="Kártya megfordítása">
+        <div class="flashcard-inner" id="flashcardInner">
+          <div class="face face-front">
+            <div class="face-title">Kérdés</div>
+            <div id="questionText" class="face-content"></div>
+            <div class="face-footer muted small">Érintsd meg a kártyát a fordításhoz</div>
+          </div>
+          <div class="face face-back">
+            <div class="face-title">Válasz</div>
+            <div id="answerText" class="face-content"></div>
+            <div id="sourceText" class="source muted small"></div>
+          </div>
+        </div>
+      </article>
+
+      <div class="row" id="actionsRow">
+        <button id="btnFlip" class="btn btn-primary" type="button">Megfordítás</button>
+      </div>
+
+      <div class="rating" id="ratingRow" aria-label="Értékelés" hidden>
+        <div class="muted small">Mennyire tudtad?</div>
+        <div class="row">
+          <button id="btnRate0" class="btn" type="button">Nem tudtam</button>
+          <button id="btnRate1" class="btn" type="button">Részben</button>
+          <button id="btnRate2" class="btn btn-primary" type="button">Tudtam</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnSkip" class="btn btn-ghost" type="button">Kihagyás</button>
+      </div>
+
+      <p class="muted small" id="studyError" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="./app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,1466 @@
+[
+  {
+    "id": "beugro_01",
+    "number": 1,
+    "question": "Mit nevezünk felejtő és nem felejtő tárolónak?",
+    "answer": "Felejtő (volatile) tároló: áramszünetkor elvesznek az adatok (pl. RAM). Nem felejtő (non-volatile): tartósan megőrzi az adatokat (pl. HDD/SSD).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 5
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 59
+      }
+    ]
+  },
+  {
+    "id": "beugro_02",
+    "number": 2,
+    "question": "Mi az a RAID?",
+    "answer": "RAID (Redundant Array of Independent Disks): több lemez összefogása teljesítmény és/vagy hibatűrés növelésére (pl. tükrözés, paritás).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 20
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 22
+      }
+    ]
+  },
+  {
+    "id": "beugro_03",
+    "number": 3,
+    "question": "Mit nevezünk puffernek?",
+    "answer": "Puffer (buffer pool): az ABKR memóriaterülete, ahol lemezblokkok másolatai vannak a gyorsabb eléréshez.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 26
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 28
+      }
+    ]
+  },
+  {
+    "id": "beugro_04",
+    "number": 4,
+    "question": "Mi az a lapcsere (lapozás, paging)?",
+    "answer": "Lapcsere (paging): amikor a pufferben helyet kell felszabadítani, egy lapot lecserélünk egy újonnan beolvasott blokkal (piszkos lapot előtte kiírunk).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 29
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 30
+      }
+    ]
+  },
+  {
+    "id": "beugro_05",
+    "number": 5,
+    "question": "Mit nevezünk piszkos puffernek?",
+    "answer": "Piszkos (dirty) puffer: olyan pufferlap/blokk, amit módosítottunk, de még nem írtunk vissza lemezre.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 27
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 29
+      }
+    ]
+  },
+  {
+    "id": "beugro_06",
+    "number": 6,
+    "question": "Milyen fájlszervezési módok vannak?",
+    "answer": "Kupac (heap), rendezett (sorted), hasított (hash) és fa-struktúrájú (pl. B+-fa alapú) fájlszervezés.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 37
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 39
+      }
+    ]
+  },
+  {
+    "id": "beugro_07",
+    "number": 7,
+    "question": "Mit jelent a kupac fájlszervezés?",
+    "answer": "Kupac (heap) szervezés: a rekordok nincsenek rendezve; beszúrás gyors (általában a végére/első szabad helyre), keresés lassabb.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 38
+      }
+    ]
+  },
+  {
+    "id": "beugro_08",
+    "number": 8,
+    "question": "Mit jelent a rendezett fájlszervezés?",
+    "answer": "Rendezett fájl: a rekordok a keresési kulcs szerint rendezve vannak; így gyorsabb a keresés és a tartomány-lekérdezés, de beszúrás/törlés drágább.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 39
+      }
+    ]
+  },
+  {
+    "id": "beugro_09",
+    "number": 9,
+    "question": "Mi az a memóriahozzáférés igazítás (word -aligment)?",
+    "answer": "Word-alignment: az adatokat a gép szóhatárára (pl. 4/8 bájt) igazítjuk, hogy gyorsabban/egyben lehessen őket olvasni.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 43
+      }
+    ]
+  },
+  {
+    "id": "beugro_10",
+    "number": 10,
+    "question": "Milyen céljaink vannak a fájlszervezés kiválasztásánál?",
+    "answer": "Segédstruktúra nélkül: heap, rendezett állomány. Segédstruktúrával: hash index, elsődleges (ritka) és másodlagos (sűrű) index, többszintű/B+ fa, bittérkép index.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 5
+      },
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 5
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 37
+      }
+    ]
+  },
+  {
+    "id": "beugro_11",
+    "number": 11,
+    "question": "Mit nevezünk egyenletességi feltételnek a lekérdezések esetén?",
+    "answer": "Scan sharing (szinkronizált szkennelés): több lekérdezés megoszthatja ugyanazt a beolvasást/kurzort; Oracle-ben ez csak teljesen azonos lekérdezéseknél engedett.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 32
+      }
+    ]
+  },
+  {
+    "id": "beugro_12",
+    "number": 12,
+    "question": "Milyen algoritmussal kereshetünk rendezett állományban?",
+    "answer": "A lift (elevator/SCAN) algoritmussal: a fej egy irányba halad, kiszolgálja az útjába eső kéréseket, majd a végén visszafordul.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 24
+      },
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 23
+      }
+    ]
+  },
+  {
+    "id": "beugro_13",
+    "number": 13,
+    "question": "Milyen hasításokat különböztetünk meg a kosarak száma szerint?",
+    "answer": "Statikus (fix kosárszámú) és dinamikus (változó kosárszámú) hasítás.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 14
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 31
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 15
+      }
+    ]
+  },
+  {
+    "id": "beugro_14",
+    "number": 14,
+    "question": "Mit nevezünk statikus hasításnak?",
+    "answer": "Statikus hasítás: a kosarak száma rögzített, a hash függvény mindig a fix kosarak egyikébe képez.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 14
+      }
+    ]
+  },
+  {
+    "id": "beugro_15",
+    "number": 15,
+    "question": "Mit nevezünk dinamikus hasításnak?",
+    "answer": "Dinamikus hasítás: a kosarak száma a fájl növekedésével változhat (kosár felosztás/új kosár nyitás).",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 14
+      }
+    ]
+  },
+  {
+    "id": "beugro_16",
+    "number": 16,
+    "question": "Milyen dinamikus hasításokat ismerünk?",
+    "answer": "Lineáris hasítás és kiterjeszthető (extendible) hasítás.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 14
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 22
+      }
+    ]
+  },
+  {
+    "id": "beugro_17",
+    "number": 17,
+    "question": "Milyen szempontok alapján kell hasító függvényt választanunk (2 szempont)?",
+    "answer": "Olyat, ami gyorsan számolható és alacsony ütközési (collision) arányt ad (a kettő közt trade-off van).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_tarolas.pdf",
+        "page": 21
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 18
+      }
+    ]
+  },
+  {
+    "id": "beugro_18",
+    "number": 18,
+    "question": "Mikor jó egy hasító függvény és ilyenkor milyen hosszúak a blokkláncok?",
+    "answer": "Akkor jó, ha egyenletesen osztja el a rekordokat; ekkor a blokkláncok közel azonos hosszúak, kb. B/K blokk.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 19
+      }
+    ]
+  },
+  {
+    "id": "beugro_19",
+    "number": 19,
+    "question": "Ha túl nagynak választjuk K -t hasításkor, akkor ez milyen problémát okozhat?",
+    "answer": "Túl nagy K esetén a címtár/kosártömb túl nagy lesz (memóriaigény, lapozás), és a duplázás/bővítés drága művelet.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 30
+      }
+    ]
+  },
+  {
+    "id": "beugro_20",
+    "number": 20,
+    "question": "Milyen keresésre nem jó a hasító indexelés?",
+    "answer": "Intervallumos/tartományos (a < A < b) keresésre nem jó, mert a hash nem őrzi a rendezést.",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 20
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 38
+      }
+    ]
+  },
+  {
+    "id": "beugro_21",
+    "number": 21,
+    "question": "Lineáris hasító index esetén mikor nyitunk meg új kosarat?",
+    "answer": "Amikor a terhelés átlépi a kitöltési küszöböt (pl. 80%), az ütemező új kosarat nyit (split).",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 31
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 34
+      }
+    ]
+  },
+  {
+    "id": "beugro_22",
+    "number": 22,
+    "question": "Mire használhatjuk a hasító táblákat az adatbázisban?",
+    "answer": "Hash táblát használhatunk indexstruktúraként, belső metaadatokhoz (pl. laptábla), és ideiglenes struktúraként (pl. hash join).",
+    "sources": [
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 39
+      }
+    ]
+  },
+  {
+    "id": "beugro_23",
+    "number": 23,
+    "question": "Mit nevezünk elsődleges indexnek?",
+    "answer": "Elsődleges index: a tábla fizikai rendezési kulcsára épül (a rekordok a kulcs szerint rendezettek), és tipikusan csak egy lehet.",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 5
+      },
+      {
+        "file": "ab2_indexek1.pdf",
+        "page": 5
+      }
+    ]
+  },
+  {
+    "id": "beugro_24",
+    "number": 24,
+    "question": "Mit nevezünk másodlagos indexnek?",
+    "answer": "Másodlagos index: nem a fizikai rendezési kulcson van; a rekordok nincsenek ezen a kulcson rendezve, ezért több találathoz mutatólista tartozhat.",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 12
+      }
+    ]
+  },
+  {
+    "id": "beugro_25",
+    "number": 25,
+    "question": "Mit nevezünk sűrű indexnek?",
+    "answer": "Sűrű index: minden rekordhoz (vagy minden kulcsérték előforduláshoz) van indexbejegyzés.",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 8
+      }
+    ]
+  },
+  {
+    "id": "beugro_26",
+    "number": 26,
+    "question": "Mit nevezünk ritka indexnek?",
+    "answer": "Ritka index: csak bizonyos rekordokhoz/blokkokhoz van bejegyzés (pl. blokkonként az első kulcs); rendezett fájlhoz használható.",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 10
+      },
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 11
+      }
+    ]
+  },
+  {
+    "id": "beugro_27",
+    "number": 27,
+    "question": "Mit hívunk fedőértéknek?",
+    "answer": "Fedőérték: ritka indexben a keresett értéknél kisebb vagy egyenlő legnagyobb indexkulcs (innen indul a keresés az adatfájlban).",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 10
+      }
+    ]
+  },
+  {
+    "id": "beugro_28",
+    "number": 28,
+    "question": "Mit nevezünk többszintű indexnek?",
+    "answer": "Többszintű index: az indexfájlra is készítünk indexet, így szinteken (hierarchiában) keresünk.",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 15
+      },
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 17
+      }
+    ]
+  },
+  {
+    "id": "beugro_29",
+    "number": 29,
+    "question": "Mit jelent a B+ fában a „B”?",
+    "answer": "A „B” a balanced (kiegyensúlyozott) fát jelenti: minden levél azonos mélységben van.",
+    "sources": [
+      {
+        "file": "ab2_indexek3.pdf",
+        "page": 2
+      },
+      {
+        "file": "ab2_indexek3.pdf",
+        "page": 7
+      }
+    ]
+  },
+  {
+    "id": "beugro_30",
+    "number": 30,
+    "question": "Hány kulcsot és mutatót tartalmaz egy B+ fa csúcs?",
+    "answer": "Belső csúcsban m mutatóhoz m-1 kulcs tartozik; a levelekben kulcs-rekordmutató (RID) párok vannak.",
+    "sources": [
+      {
+        "file": "ab2_indexek3.pdf",
+        "page": 4
+      }
+    ]
+  },
+  {
+    "id": "beugro_31",
+    "number": 31,
+    "question": "Hogyan érdemes tárolni az ismétlődő értékeket a B+ fában?",
+    "answer": "Ismétlődő kulcshoz több rekordmutatót tárolunk (lista/overflow blokk), nem ismételjük a kulcsot minden rekordnál.",
+    "sources": [
+      {
+        "file": "ab2_indexek2.pdf",
+        "page": 11
+      }
+    ]
+  },
+  {
+    "id": "beugro_32",
+    "number": 32,
+    "question": "Milyen költséget veszünk figyelembe a fizikai operátorok esetén?",
+    "answer": "Főleg a lemez I/O költséget vesszük figyelembe (hány blokkot kell beolvasni/kiírni).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 6
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 1
+      }
+    ]
+  },
+  {
+    "id": "beugro_33",
+    "number": 33,
+    "question": "Milyen relációs algebrai műveleteket vezethetünk vissza rendezésre?",
+    "answer": "Vetítés (duplikátumok kiszűrése), halmazműveletek (unió, metszet, különbség) és az ORDER BY visszavezethető rendezésre.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 18
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 5
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 6
+      }
+    ]
+  },
+  {
+    "id": "beugro_34",
+    "number": 34,
+    "question": "A rendezés milyen két fajtáját különböztetjük meg?",
+    "answer": "Belső (memóriabeli) és külső (lemezes) rendezést különböztetünk meg.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 18
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 21
+      }
+    ]
+  },
+  {
+    "id": "beugro_35",
+    "number": 35,
+    "question": "Mennyi a belső rendezés IO költsége?",
+    "answer": "Belső rendezés I/O költsége: 2*B_R (egyszer beolvasunk, egyszer kiírunk).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 19
+      }
+    ]
+  },
+  {
+    "id": "beugro_36",
+    "number": 36,
+    "question": "Külső összefésülő rendezésnél mit csinál a rendezési (sort) lépés?",
+    "answer": "Az inputot memóriába férő darabokra bontja, rendezi, majd rendezett futamokként (run) kiírja.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 21
+      }
+    ]
+  },
+  {
+    "id": "beugro_37",
+    "number": 37,
+    "question": "Külső összefésülő rendezésnél mit csinál az összevonási (merge) lépés?",
+    "answer": "A rendezett futamokat párhuzamosan beolvasva összefésüli és nagyobb rendezett futammá/eredménnyé írja ki.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 25
+      }
+    ]
+  },
+  {
+    "id": "beugro_38",
+    "number": 38,
+    "question": "Külső összefésülő rendezéskor mikor kell több menetben végezni az összevonási  lépést?",
+    "answer": "Ha egyszerre nem tudjuk az összes futamot összevonni (kevés puffer miatt), akkor több merge-menetre van szükség.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 25
+      }
+    ]
+  },
+  {
+    "id": "beugro_39",
+    "number": 39,
+    "question": "A vetítés milyen három lépés megvalósításából áll?",
+    "answer": "Attribútumok kiválasztása, rendezés, duplikátumok eltávolítása.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 26
+      }
+    ]
+  },
+  {
+    "id": "beugro_40",
+    "number": 40,
+    "question": "Az összekapcsolásoknak milyen megvalósításait használjuk (5 algoritmus)?",
+    "answer": "Egyszerű nested-loop, block nested-loop, index nested-loop, sort-merge join, hash join.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 30
+      }
+    ]
+  },
+  {
+    "id": "beugro_41",
+    "number": 41,
+    "question": "Az összekapcsolásoknál melyik táblát választjuk külső táblának általában?",
+    "answer": "Általában a kisebb relációt választjuk külső táblának.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 33
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_42",
+    "number": 42,
+    "question": "Milyen esetekben érdemes a sort -merge összekapcsolást használni?",
+    "answer": "Ha a táblák már rendezettek (vagy úgyis rendezni kell) a join-kulcs szerint, és a feltétel rendezéssel jól kezelhető (pl. equi-join).",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 41
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 40
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 49
+      }
+    ]
+  },
+  {
+    "id": "beugro_43",
+    "number": 43,
+    "question": "Milyen típusú összekapcsolásokra nem használható a hash -join?",
+    "answer": "Nem-egyenlőségi (pl. <, >) joinokra nem használható; alapvetően equi-joinra jó.",
+    "sources": [
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 45
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 44
+      },
+      {
+        "file": "ab2_fizikai_operatorok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_44",
+    "number": 44,
+    "question": "Mi a lekérdezések optimalizálásának a célja és miket használunk fel ehhez?",
+    "answer": "Cél: a lehető legkisebb költségű végrehajtási terv kiválasztása. Ehhez költségmodellt, statisztikákat és ekvivalencia-szabályokat/heurisztikákat használunk.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 42
+      }
+    ]
+  },
+  {
+    "id": "beugro_45",
+    "number": 45,
+    "question": "Mi az a relációs algebrai kifejezésfa?",
+    "answer": "A relációs algebrai műveletek fastruktúrája: levelek az alaptáblák, belső csúcsok az operátorok, gyökér az eredmény.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 26
+      }
+    ]
+  },
+  {
+    "id": "beugro_46",
+    "number": 46,
+    "question": "Milyen költségmodellt használunk relációs algebrai optimalizálás esetében?",
+    "answer": "Blokk I/O alapú költségmodellt használunk (olvasások/írások számát).",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 13
+      },
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 14
+      },
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 4
+      }
+    ]
+  },
+  {
+    "id": "beugro_47",
+    "number": 47,
+    "question": "Milyen módszert használ a szabály alapú (relációs) optimalizáció?",
+    "answer": "Ekvivalencia-átalakítási szabályokkal írja át a kifejezést olcsóbb (heurisztikusan jobb) alakra.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 13
+      },
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 4
+      }
+    ]
+  },
+  {
+    "id": "beugro_48",
+    "number": 48,
+    "question": "Miért mondjuk, hogy az eljárás heurisztikus relációs algebrai optimalizálás  esetén?",
+    "answer": "Mert nem garantáltan optimális: nem vizsgál végig minden tervet, hanem „általában jó” szabályokat használ.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 13
+      }
+    ]
+  },
+  {
+    "id": "beugro_49",
+    "number": 49,
+    "question": "Miért nem egyértelmű az eredmény relációs algebrai optimalizálás esetén?",
+    "answer": "Több, egymással ekvivalens kifejezés/terv létezik, és a szabályok alkalmazási sorrendje eltérő eredményhez vezethet.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 13
+      }
+    ]
+  },
+  {
+    "id": "beugro_50",
+    "number": 50,
+    "question": "A relációs algebrai kifejezésfában melyek az unáris csúcsok?",
+    "answer": "Az egyoperandusú operátorok (pl. szelekció, vetítés, átnevezés).",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 26
+      }
+    ]
+  },
+  {
+    "id": "beugro_51",
+    "number": 51,
+    "question": "A relációs algebrai kifejezésfában melyek a bináris csúcsok?",
+    "answer": "A kétoperandusú operátorok (pl. összekapcsolás/kartézián szorzat, unió, metszet, különbség).",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 26
+      }
+    ]
+  },
+  {
+    "id": "beugro_52",
+    "number": 52,
+    "question": "A relációs algebrai kifejezésfában mik a levélcsúcsok?",
+    "answer": "Az alaptáblák/relációk.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 26
+      }
+    ]
+  },
+  {
+    "id": "beugro_53",
+    "number": 53,
+    "question": "Mik azok a relációs algebrai ekvivalencia szabályok?",
+    "answer": "Olyan szabályok, amelyekkel a kifejezést ekvivalens (ugyanazt eredményező) formára írhatjuk át optimalizálás céljából.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 15
+      }
+    ]
+  },
+  {
+    "id": "beugro_54",
+    "number": 54,
+    "question": "Miért érdemes hamarabb szelektálni relációs algebrai optimalizálás esetén?",
+    "answer": "Mert csökkenti a köztes eredmények méretét, így kevesebb I/O-val olcsóbb lesz a további feldolgozás.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 2
+      },
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 14
+      }
+    ]
+  },
+  {
+    "id": "beugro_55",
+    "number": 55,
+    "question": "Miért érdemes természetes összekapcsolásokat képezni szorzások helyett  relációs algebrai optimalizálás esetén?",
+    "answer": "Mert a szorzás óriási köztes relációt ad; a természetes join közvetlenül a megfelelő sorpárokat adja, kisebb köztes adattal.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 23
+      }
+    ]
+  },
+  {
+    "id": "beugro_56",
+    "number": 56,
+    "question": "Miért érdemes az unáris műveletek összevonni relációs algebrai optimalizálás  esetén?",
+    "answer": "Kevesebb művelet/pásztázás kell (pl. szelekciók és vetítések összevonása/tologatása), így kisebb a költség.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 14
+      }
+    ]
+  },
+  {
+    "id": "beugro_57",
+    "number": 57,
+    "question": "Miért érdemes a közös részkifejezéseket megkeresni relációs algebrai  optimalizálás esetén?",
+    "answer": "A közös részt elég egyszer kiszámolni és újra felhasználni, így csökken a teljes költség.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 13
+      }
+    ]
+  },
+  {
+    "id": "beugro_58",
+    "number": 58,
+    "question": "Hogyan néz ki a bal -mély összekapcsolási fa?",
+    "answer": "Bal-mély (left-deep) fa: minden joinban a bal oldalon a korábbi join eredménye áll, a jobb oldalon egy alaptábla.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 37
+      }
+    ]
+  },
+  {
+    "id": "beugro_59",
+    "number": 59,
+    "question": "Hogyan néz ki a bozótszerű összekapcsolási fa?",
+    "answer": "Bozótszerű (bushy) fa: a join mindkét oldalán lehet köztes eredmény, nem csak az egyik oldalon.",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 35
+      }
+    ]
+  },
+  {
+    "id": "beugro_60",
+    "number": 60,
+    "question": "Milyen típusú összekapcsolási fákat érdemes vizsgálni?",
+    "answer": "Általában a bal-mély (left-deep) fákat érdemes vizsgálni (kevesebb terv, jól csővezetékelhető).",
+    "sources": [
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 38
+      },
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 37
+      },
+      {
+        "file": "ab2_rel_alg_op.pdf",
+        "page": 39
+      }
+    ]
+  },
+  {
+    "id": "beugro_61",
+    "number": 61,
+    "question": "Mit nevezünk az adatbázisban tranzakciónak?",
+    "answer": "Tranzakció: az adatbázison végzett műveletek logikai egysége, amit a rendszer atomi egészként kezel.",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 18
+      }
+    ]
+  },
+  {
+    "id": "beugro_62",
+    "number": 62,
+    "question": "Mi az ACID betűszó egyes betűinek a jelentése?",
+    "answer": "A: atomicity (atomosság), C: consistency (konzisztencia), I: isolation (izoláció), D: durability (tartósság).",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_63",
+    "number": 63,
+    "question": "Mit jelent a tranzakció ACID -ból az A-hoz tartozó tulajdonsága?",
+    "answer": "Atomosság: a tranzakció vagy teljesen végrehajtódik, vagy teljesen visszagörgetődik.",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_64",
+    "number": 64,
+    "question": "Mit jelent a tranzakció ACID -ból az C-hez tartozó tulajdonsága?",
+    "answer": "Konzisztencia: a tranzakció a megszorításokat betartva konzisztens állapotot hagy maga után.",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_65",
+    "number": 65,
+    "question": "Mit jelent a tranzakció ACID -ból az I-hez tartozó tulajdonsága?",
+    "answer": "Izoláció: párhuzamos futás mellett is olyan, mintha sorosan futna.",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_66",
+    "number": 66,
+    "question": "Mit jelent a tranzakció ACID -ból az D-hez tartozó tulajdonsága?",
+    "answer": "Tartósság: commit után a hatás hiba esetén sem veszhet el.",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 19
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 31
+      }
+    ]
+  },
+  {
+    "id": "beugro_67",
+    "number": 67,
+    "question": "A tranzakciók melyik tulajdonságát biztosítja a naplózás?",
+    "answer": "A tartósságot (D) biztosítja.",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 21
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 28
+      }
+    ]
+  },
+  {
+    "id": "beugro_68",
+    "number": 68,
+    "question": "A tranzakciók melyik tulajdonságát biztosítja a konkurenciakezelés?",
+    "answer": "Az izolációt (I) biztosítja.",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 2
+      }
+    ]
+  },
+  {
+    "id": "beugro_69",
+    "number": 69,
+    "question": "Milyen típusú hibák fordulhatnak elő?",
+    "answer": "Beviteli/felhasználói hiba, rendszerhiba (áramszünet/szoftver), adathordozó- vagy eszközhiba (lemez), és katasztrofális hiba (pl. tűz).",
+    "sources": [
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 30
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 29
+      },
+      {
+        "file": "ab2_tranzakciok.pdf",
+        "page": 32
+      }
+    ]
+  },
+  {
+    "id": "beugro_70",
+    "number": 70,
+    "question": "Mit tekinthetünk adatbáziselemnek?",
+    "answer": "Adatbáziselem lehet reláció (tábla), rekord (sor) vagy blokk/lap.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 5
+      }
+    ]
+  },
+  {
+    "id": "beugro_71",
+    "number": 71,
+    "question": "A tranzakció és az adatbázis kölcsönhatásának milyen három fontos helyszíne  van?",
+    "answer": "A lemezblokkok területe, a pufferkészlet (buffer pool), és a tranzakció saját memóriaterülete.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 6
+      }
+    ]
+  },
+  {
+    "id": "beugro_72",
+    "number": 72,
+    "question": "Mit jelent az INPUT(X) művelet?",
+    "answer": "INPUT(X): az X-et tartalmazó lemezblokk bemásolása a pufferkészletbe.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 7
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 8
+      }
+    ]
+  },
+  {
+    "id": "beugro_73",
+    "number": 73,
+    "question": "Mit jelent az OUTPUT(X) művelet?",
+    "answer": "OUTPUT(X): az X-et tartalmazó pufferblokk kiírása lemezre.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 7
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 8
+      }
+    ]
+  },
+  {
+    "id": "beugro_74",
+    "number": 74,
+    "question": "Mit jelent a READ(X,t) művelet?",
+    "answer": "READ(X,t): az X bemásolása a tranzakció t lokális változójába (ha kell, előtte INPUT).",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 7
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 8
+      }
+    ]
+  },
+  {
+    "id": "beugro_75",
+    "number": 75,
+    "question": "Mit jelent a WRITE(X,t) művelet?",
+    "answer": "WRITE(X,t): a t lokális változó tartalmának beírása az X pufferbeli másolatába.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 7
+      }
+    ]
+  },
+  {
+    "id": "beugro_76",
+    "number": 76,
+    "question": "Miből áll a napló?",
+    "answer": "A napló időrendi naplóbejegyzések (log rekordok) sorozata.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 10
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 68
+      }
+    ]
+  },
+  {
+    "id": "beugro_77",
+    "number": 77,
+    "question": "Milyen naplózási megközelítéseket ismerünk?",
+    "answer": "UNDO, REDO és UNDO/REDO naplózás.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 12
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 75
+      }
+    ]
+  },
+  {
+    "id": "beugro_78",
+    "number": 78,
+    "question": "Mi az UNDO naplózás hátránya?",
+    "answer": "UNDO-nál commitkor a módosított adatokat azonnal lemezre kell írni, ezért sok I/O-t okoz.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 56
+      }
+    ]
+  },
+  {
+    "id": "beugro_79",
+    "number": 79,
+    "question": "Mi a REDO naplózás hátránya?",
+    "answer": "REDO-nál a módosított adatokat commitig pufferben kell tartani, ezért nagy pufferigénye van.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 56
+      }
+    ]
+  },
+  {
+    "id": "beugro_80",
+    "number": 80,
+    "question": "Mit jelent a WAL elv?",
+    "answer": "WAL (Write-Ahead Logging): a logot lemezre kell írni, mielőtt a hozzá tartozó adatlapot kiírnánk; commitnál is log-flush kell.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 26
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 67
+      }
+    ]
+  },
+  {
+    "id": "beugro_81",
+    "number": 81,
+    "question": "Milyen naplózást használ az Oracle?",
+    "answer": "Az UNDO és REDO egy speciális keverékét (redo log + undo adatok).",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 68
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 12
+      }
+    ]
+  },
+  {
+    "id": "beugro_82",
+    "number": 82,
+    "question": "Mi a különbség az ARCHIVELOG és NOARCHIVELOG működés között?",
+    "answer": "ARCHIVELOG módban a redo logokat archiválja (jobb helyreállítás), NOARCHIVELOG-ban felülírja őket (korlátozott helyreállítás).",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 70
+      }
+    ]
+  },
+  {
+    "id": "beugro_83",
+    "number": 83,
+    "question": "Mik azok a rollback szegmensek az Oracle adatbázisban?",
+    "answer": "Rollback (undo) szegmensek: a módosítások előtti képeket tárolják visszagörgetéshez és olvasási konzisztenciához.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 71
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 72
+      }
+    ]
+  },
+  {
+    "id": "beugro_84",
+    "number": 84,
+    "question": "Mit jelent a naplózás naplózása?",
+    "answer": "A rollback/undo műveletekről is készül redo log bejegyzés, mert a rollback szegmens is az adatbázis része.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 73
+      }
+    ]
+  },
+  {
+    "id": "beugro_85",
+    "number": 85,
+    "question": "Milyen két típusa van az adatbázis mentésének?",
+    "answer": "Teljes (full) és növekményes (incremental) mentés.",
+    "sources": [
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 74
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 5
+      },
+      {
+        "file": "ab2_naplozas.pdf",
+        "page": 6
+      }
+    ]
+  },
+  {
+    "id": "beugro_86",
+    "number": 86,
+    "question": "Mit hívunk ütemezésnek?",
+    "answer": "Ütemezés: több tranzakció műveleteinek összefűzött végrehajtási sorrendje (a tranzakción belüli sorrend megtartásával).",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 11
+      }
+    ]
+  },
+  {
+    "id": "beugro_87",
+    "number": 87,
+    "question": "Mit hívunk soros ütemezésnek?",
+    "answer": "Soros ütemezés: a tranzakciók egymás után futnak, nincs átfedés.",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 8
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 7
+      }
+    ]
+  },
+  {
+    "id": "beugro_88",
+    "number": 88,
+    "question": "Mi a soros ütemezés hátránya?",
+    "answer": "Hátránya: nincs párhuzamosság, ezért rosszabb teljesítmény/átbocsátás.",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 8
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 7
+      }
+    ]
+  },
+  {
+    "id": "beugro_89",
+    "number": 89,
+    "question": "Mikor konfliktus -ekvivalens két ütemezés?",
+    "answer": "Két ütemezés konfliktus-ekvivalens, ha minden konfliktusos műveletpár sorrendje megegyezik.",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 18
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 22
+      }
+    ]
+  },
+  {
+    "id": "beugro_90",
+    "number": 90,
+    "question": "Milyen két megközelítése van az ütemezések sorbarendezhetőségének az  elérésére?",
+    "answer": "Passzív (ellenőrzés: precedenciagráf + körvizsgálat) és aktív (megelőzés: az ütemező nem enged kört kialakulni) megközelítés.",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 2
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 33
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 32
+      }
+    ]
+  },
+  {
+    "id": "beugro_91",
+    "number": 91,
+    "question": "Az aktív módszer milyen eszközöket használhat a sorbarendezhetőség elérésére?",
+    "answer": "Zárak, időbélyegek, illetve érvényesítés (validáció).",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 2
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 32
+      }
+    ]
+  },
+  {
+    "id": "beugro_92",
+    "number": 92,
+    "question": "Mi az a holtpont?",
+    "answer": "Holtpont: körkörös várakozás, a tranzakciók egymás erőforrására/zárára várnak, ezért egyik sem halad.",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 18
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 21
+      }
+    ]
+  },
+  {
+    "id": "beugro_93",
+    "number": 93,
+    "question": "Milyen két megközelítése van a holtpont kezelésének?",
+    "answer": "Két megközelítés: holtpont megelőzés és holtpont felismerés + feloldás (pl. visszagörgetés).",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 78
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 18
+      }
+    ]
+  },
+  {
+    "id": "beugro_94",
+    "number": 94,
+    "question": "Mit jelent az éhezés a tranzakciók esetén?",
+    "answer": "Éhezés: egy tranzakció tartósan nem jut erőforráshoz, ezért nagyon sokáig nem fejeződik be.",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 8
+      }
+    ]
+  },
+  {
+    "id": "beugro_95",
+    "number": 95,
+    "question": "Milyen típusú zárakat használunk többmódú zárolás esetén?",
+    "answer": "Osztott (S) és kizárólagos (X) zárak, illetve szándékzárak: IS, IX (és SIX).",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 56
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 55
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 57
+      }
+    ]
+  },
+  {
+    "id": "beugro_96",
+    "number": 96,
+    "question": "Milyen elemeit zárolhatjuk az adatbázisnak többféle szemcsézettségű zárral?",
+    "answer": "Zárolható pl. tábla/reláció, blokk/lap és sor/rekord (hierarchikusan).",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 55
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 56
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 54
+      }
+    ]
+  },
+  {
+    "id": "beugro_97",
+    "number": 97,
+    "question": "Mi az a nem ismételhető olvasás?",
+    "answer": "Nem ismételhető olvasás: ugyanazt a sort újraolvasva más értéket kapunk, mert közben más tranzakció módosította.",
+    "sources": [
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 15
+      }
+    ]
+  },
+  {
+    "id": "beugro_98",
+    "number": 98,
+    "question": "Mik azok a fantom sorok?",
+    "answer": "Fantom sorok: egy tartomány-lekérdezés újrafuttatásakor új/eltűnő sorok jelennek meg, mert más tranzakció beszúrt/törölt.",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 91
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 93
+      }
+    ]
+  },
+  {
+    "id": "beugro_99",
+    "number": 99,
+    "question": "Milyen optimista módjai vannak a sorbarendezhetőség elérésének?",
+    "answer": "Optimista módszerek: időbélyeg-alapú ütemezés és érvényesítés (validáció).",
+    "sources": [
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 2
+      },
+      {
+        "file": "ab2_konkurenciakezeles.pdf",
+        "page": 20
+      },
+      {
+        "file": "ab2_zarak.pdf",
+        "page": 3
+      }
+    ]
+  }
+]

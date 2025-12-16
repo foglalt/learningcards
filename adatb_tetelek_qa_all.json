@@ -1,0 +1,1712 @@
+{
+  "meta": {
+    "title": "Adatbázisok 2 – Vizsga tételek (minta kérdések) – kidolgozott válaszok",
+    "language": "hu",
+    "generated_at": "2025-12-16",
+    "question_source": "ab2_vizsga.pdf",
+    "answer_sources": [
+      "ab2_fizikai_tarolas.pdf",
+      "ab2_indexek1.pdf",
+      "ab2_indexek2.pdf",
+      "ab2_indexek3.pdf",
+      "ab2_fizikai_operatorok.pdf",
+      "ab2_rel_alg_op.pdf",
+      "ab2_naplozas.pdf",
+      "ab2_konkurenciakezeles.pdf",
+      "ab2_zarak.pdf"
+    ],
+    "notation": {
+      "N_R": "rekordok (sorok) száma az R relációban",
+      "L_R": "egy rekord mérete az R relációban",
+      "bf_R": "blokkolási faktor: hány rekord fér el egy blokkban az R relációból",
+      "B_R": "az R reláció tárolásához szükséges blokkok száma",
+      "V(A,R)": "különböző értékek száma az R reláció A oszlopában",
+      "SC(A,R)": "kiválasztási számosság (szelektivitás) az A oszlopra R-ben",
+      "M": "pufferkészlet kapacitása blokkokban (hány blokk fér el memóriában)",
+      "HTI": "egy index szintjeinek száma (pl. B+ fa magassága)"
+    }
+  },
+  "topics": [
+    {
+      "number": 1,
+      "title": "Fizikai tárolás (másodlagos tárolók, RAID, lift algoritmus, pufferkezelő, lapcsere algoritmusok)",
+      "questions": [
+        {
+          "id": "tetel_01_a",
+          "label": "a",
+          "question": "Hogyan működik a RAID X. szint?",
+          "answer": "A RAID több lemezt fog össze a teljesítmény és/vagy a hibatűrés javítására; a működés a választott RAID-szint (0/1/4/5/6/10 stb.) szerint csíkozásból, tükrözésből és/vagy paritásból áll.",
+          "answer_points": [
+            "RAID (Redundant Arrays of Independent Disks): több lemez együtt, cél: nagyobb I/O teljesítmény és/vagy nagyobb megbízhatóság (hibatűrés).",
+            "RAID 0: blokk-szintű csíkozás (striping), nincs redundancia; gyorsabb olvasás/írás, de bármelyik lemez kiesése adatvesztést jelent.",
+            "RAID 1: tükrözés (mirroring); minden blokk két lemezen is megvan, párhuzamos olvasás lehetséges; drága (a kapacitás ~fele hasznos), de hibatűrő.",
+            "RAID 2–4 (ritkán használják): RAID 2 bit-szintű csíkozás + Hamming-kód; RAID 3 bájt-szintű csíkozás + külön paritáslemez; RAID 4 blokk-szintű csíkozás + külön paritáslemez.",
+            "RAID 4: dedikált paritáslemez miatt íráskor a paritást is frissíteni kell → a paritáslemez írási szűk keresztmetszet lehet.",
+            "RAID 5: a paritásblokkokat elosztjuk a lemezek között → kiegyenlítettebb terhelés; tipikusan 1 lemezkiesést tolerál; legalább 3 lemez szükséges.",
+            "RAID 6: két paritás (pl. P és Q, utóbbi pl. Reed–Solomon) → két lemezkiesést is tolerál; írás általában lassabb.",
+            "Kombinált: RAID 01 (0+1) = előbb csíkozás, majd tükrözés; RAID 10 (1+0) = előbb tükrözés, majd csíkozás (gyakran jó választás teljesítménykritikus rendszerekben).",
+            "Választási szempontok: költségkeret, teljesítmény, hibatűrés."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [12, 13, 14, 15, 18, 19, 20, 21, 22],
+              "note": "RAID szintek és választási szempontok"
+            }
+          ]
+        },
+        {
+          "id": "tetel_01_b",
+          "label": "b",
+          "question": "Hogyan működik a helyreállítás paritásblokk használata esetén?",
+          "answer": "Paritásos RAID esetén a paritásblokk (pl. XOR) a stripe adatblokkjainak összefoglalója; egy kiesett blokk a megmaradt blokkok és a paritás XOR-ával visszaszámolható.",
+          "answer_points": [
+            "Paritás (RAID 4/5): egy stripe-hoz paritásblokk tartozik, tipikusan XOR: P = A XOR B XOR C (bitenként).",
+            "Helyreállítás: ha pl. C kiesik, akkor C = P XOR A XOR B (XOR tulajdonság: X XOR X = 0, és XOR „visszafordítható”).",
+            "A módszer bitenként működik: a hiányzó bit az összes többi megfelelő helyen lévő bit XOR-ja (mod 2 összeg).",
+            "Íráskor a paritást is frissíteni kell (ha bármely adatblokk változik), ezért dedikált paritáslemez (RAID 4) esetén a paritáslemez gyakrabban íródik.",
+            "RAID 5 ezt enyhíti: a paritásblokkokat elosztja a lemezek között, így az I/O terhelés kiegyenlítettebb."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [16, 17, 18],
+              "note": "Paritásblokkok és XOR-alapú helyreállítás"
+            }
+          ]
+        },
+        {
+          "id": "tetel_01_c",
+          "label": "c",
+          "question": "Hogyan lehet optimalizálni a blokkolvasásokat lemez esetén? Lift algoritmus működése.",
+          "answer": "A blokkolvasások optimalizálása főleg puffereléssel, előreolvasással és a lemezfej-mozgás ütemezésével történik; a lift (SCAN/elevator) algoritmus a kéréseket a fej mozgásirányához igazítva rendezi, majd a végén irányt vált.",
+          "answer_points": [
+            "Cél: a drága lemez I/O (különösen HDD-n a seek+rotáció) minimalizálása, és minél inkább szekvenciális hozzáférés elérése.",
+            "Pufferelés (buffering): gyakran használt blokkok memóriában tartása, így ismételt olvasásnál buffer hit történik.",
+            "Előreolvasás (read-ahead): szekvenciális bejárásnál a következő blokkokat is előre beolvassuk.",
+            "Lemez ütemezése (disk-arm scheduling): a pending kéréseket úgy rendezzük, hogy a fej mozgása minimális legyen.",
+            "Lift/SCAN algoritmus: a fej „liftként” mozog egy irányba, a kéréseket út közben kiszolgálja, majd a végén visszafordul; tipikusan kevesebb össz-mozgás, mint naiv sorrendnél."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [23, 24],
+              "note": "Blokkolvasás optimalizálása és lift algoritmus"
+            }
+          ]
+        },
+        {
+          "id": "tetel_01_d",
+          "label": "d",
+          "question": "Milyen lapcsere algoritmusok vannak, hogyan működnek?",
+          "answer": "A pufferkezelő lapcsere algoritmusai akkor kellenek, amikor nincs üres pufferkeret; a tipikus stratégiák LRU/MRU, toss-immediate, LRU-K és közelítései, illetve ezek gyakorlati kiegészítései (piszkos lap, pin-számláló, „fontos” lapok).",
+          "answer_points": [
+            "Lapcsere akkor kell, ha buffer miss van és nincs üres hely a pufferkészletben; piszkos (dirty) lapot csere előtt ki kell írni a lemezre.",
+            "LRU (Least Recently Used): minden laphoz utolsó-hozzáférés időbélyeg; a legrégebben használt lapot dobjuk ki.",
+            "Toss-immediate: ha egy lap feldolgozása után várhatóan nem kell újra (pl. szekvenciális szkennelés), azonnal eldobható, hogy ne „szemetelje” a puffert.",
+            "MRU (Most Recently Used): a legutóbb használt lapot dobjuk ki; bizonyos hozzáférési mintáknál hasznos lehet.",
+            "LRU-K: a legutolsó K hozzáférés időbélyegét tároljuk; a K-adik legutóbbi hozzáférés alapján választunk áldozatot → frissességet és gyakoriságot is figyelembe vesz.",
+            "LRU-K közelítése (pl. MySQL): „young” és „old” lista; új lapok az old elejére kerülnek, újra-eléréskor young elejére; csere tipikusan az old végéről.",
+            "Gyakorlati szempontok: pin-számláló (rögzített lap nem dobható), „fontos” lapok (pl. index gyökér) preferáltan maradnak, piszkos lap cserehelyzetben kerülhető (inkább tisztát dobjunk)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [28, 29, 30, 31, 32],
+              "note": "Lapozási (lapcsere) algoritmusok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Adattárolás (blokkok, fájlok, fájlszervezés, rekordok felépítése, rendszerkatalógusok, rekord azonosítók)",
+      "questions": [
+        {
+          "id": "tetel_02_a",
+          "label": "a",
+          "question": "Hasonlítsa össze a kupac és rendezett fájlszervezést (előnyök, hátrányok).",
+          "answer": "Kupac (heap) esetén a rekordok rendezetlenül vannak a blokkokban, ezért a beszúrás gyors, a keresés viszont lassú; rendezett fájlnál a keresési/range műveletek gyorsabbak, de a beszúrás és törlés drága a rendezettség fenntartása miatt.",
+          "answer_points": [
+            "Kupac fájlszervezés: rendezetlen blokkkollekció; tipikusan az első üres helyre (gyakran az utolsó blokkba) szúrunk → beszúrás hatékony.",
+            "Kupac keresés: egyenlőségi keresés átlagosan ~B/2 blokk (egyenletességi feltétellel), intervallum kereséshez tipikusan minden blokk kell (B).",
+            "Kupac törlés/módosítás: keresés + 1 írás; gyakori megoldás a törlési bit (tombstone) vagy üres hely hagyása.",
+            "Rendezett fájlszervezés: rekordok/blokkok egy rendező mező szerint rendezve; egyenlőségi keresés logaritmikus (bináris) a blokkokon; intervallum keresés is jól támogatott (a kezdőpontig logaritmikus, utána szekvenciális).",
+            "Rendezett beszúrás/törlés: drága (eltolások, átszervezések); tipikus enyhítések: túlcsordulási (gyűjtő) blokkok vagy üres hely hagyása és időnkénti újraszervezés.",
+            "Ha a keresési kulcs nem egyezik a rendező mezővel, akkor a rendezett állomány előnye nagyrészt elvész (keresés közelít a kupacéhoz)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [38, 39],
+              "note": "Kupac vs rendezett fájlszervezés"
+            },
+            {
+              "file": "ab2_indexek1.pdf",
+              "pages": [6, 7, 8, 9, 10, 11],
+              "note": "Kupac/rendezett állomány költségek és beszúrási stratégiák"
+            }
+          ]
+        },
+        {
+          "id": "tetel_02_b",
+          "label": "b",
+          "question": "Milyen memóriahozzáférés igazítás (word-aligment) módszereket ismer? Hogyan működnek?",
+          "answer": "Word-alignment célja, hogy a mezők a CPU szóméretének többszörösén kezdődjenek; ezt tipikusan paddinggal (felkerekítéssel) vagy a mezők átrendezésével érjük el.",
+          "answer_points": [
+            "A CPU „szóméretéhez” (tipikusan 4 vagy 8 bájt) igazítjuk a mezők kezdőcímeit, hogy gyorsabb legyen a memóriából olvasás.",
+            "Felkerekítés/padding: minden mező hosszát felfelé kerekítjük a legközelebbi szóméret-többszörösre; egyszerű és elterjedt (pl. PostgreSQL).",
+            "Átrendezés: a mezők sorrendjét úgy változtatjuk, hogy kevesebb padding kelljen (pl. azonos/kompatibilis méretű fix mezők egymás mellé).",
+            "Alapelv: törekvés arra, hogy a mezők szóméret többszörösén kezdődjenek, és a felesleges tölteléket minimalizáljuk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [43, 44, 45],
+              "note": "Memóriahozzáférés igazítás (word-alignment)"
+            }
+          ]
+        },
+        {
+          "id": "tetel_02_c",
+          "label": "c",
+          "question": "Hogyan lehet tárolni a rögzített hosszúságú rekordokat a blokkokban? Hogyan lehet kezelni a törléseket?",
+          "answer": "Fix hosszúságú rekordoknál a blokkokba való pakolás egyszerű: a rekordok egymás után kerülnek a blokkba, a fejlécben tartjuk a rekordok számát; törlésnél tipikusan lyukat hagyunk és újrahasznosítjuk, vagy tömörítünk (eltolás / utolsó rekord beemelése).",
+          "answer_points": [
+            "Fix hosszúságú rekordoknál a blokkban egymás után tároljuk a rekordokat; a blokk fejlécében nyilvántartható pl. a rekordok száma.",
+            "Beszúrás: új rekordot oda szúrunk be, ahol van hely (tipikusan a blokk végére vagy egy korábbi törlés helyére).",
+            "Törlés megközelítések: (1) lyuk hagyása és későbbi beszúráskor újrahasznosítás; (2) törlés után az utána lévő rekordok eltolása a lyuk kitöltésére; (3) a blokk utolsó rekordjának áthelyezése a törölt helyére (gyors tömörítés, sorrendet változtathat).",
+            "Gyakorlati megjegyzés: fél rekordot nem tárolunk blokkban; ha nem fér el teljesen, más blokkba kerül → maradhat „kis” üres hely."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [46, 47, 48],
+              "note": "Fix hosszúságú rekordok blokkokban és törlés kezelése"
+            }
+          ]
+        },
+        {
+          "id": "tetel_02_d",
+          "label": "d",
+          "question": "Hogyan tároljuk a változó hosszúságú mezőket a rekordokban, és a rekordokat a blokkokban?",
+          "answer": "Változó hosszúságú mezőknél tipikusan hossz-prefixet és rekord-szintű offset táblát használunk; a blokkokban pedig réses (slotted page) szerkezetet, hogy a rekordok mozgathatók legyenek a RID stabilan tartása mellett.",
+          "answer_points": [
+            "Változó hosszúságú mező tárolása: (1) null-terminátor; (2) hossz tárolása a mező előtt. A DBMS-ek tipikusan a hossz-prefixet választják (könnyű hossz meghatározás, bináris adatok is).",
+            "Rekordon belül: a fix hosszúságú mezők kerülnek előre; a változó mezőkhöz a rekord fejlécében „eltolási érték tábla” (offset table) tart mutatókat.",
+            "NULL értékek: gyakori megoldás a NULL bitmap a rekord fejlécében (mezőnként 1 bit).",
+            "Nagy mezők: LOB (Large Object) blokkokba/extern tárolóba kerülhetnek, a rekordban mutatóval (belső/külső tárolás).",
+            "Blokkban változó hosszúságú rekordokhoz: réses lapszerkezet (slotted page) – fejléc + slot array a blokk elején, rekordok a blokk végén; slot → (offset, hossz).",
+            "Törlés slotted page-ben: a slot kiürül, a rekord törlődik; az üres helyet lehet érintetlenül hagyni (olcsó), vagy kompaktálni/átrendezni (drágább)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_tarolas.pdf",
+              "pages": [49, 50, 51, 52, 54, 55],
+              "note": "Változó hosszúságú mezők, NULL bitmap és slotted pages"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Kupac és rendezett fájlszervezés, hasítótáblák.",
+      "questions": [
+        {
+          "id": "tetel_03_a",
+          "label": "a",
+          "question": "Mennyi a keresési idő kupac és rendezett fájlszervezés esetén? Hogyan működik a keresés?",
+          "answer": "Kupac fájlnál a keresés lineáris szkennelés (átlag ~B/2, legrosszabb B blokk), rendezett állománynál pedig a rendező mezőre bináris keresés (átlag ~log2(B)) és tartomány esetén utána szekvenciális olvasás.",
+          "answer_points": [
+            "Kupac szervezés: rekordok rendezetlenül; keresés egyenlőségre legrosszabb B blokk, egyenletességi feltétellel átlag B/2 blokk.",
+            "Kupac intervallum keresés: tipikusan minden blokkot be kell olvasni (B), mert nincs rendezés.",
+            "Rendezett állomány: ha a keresési mező megegyezik a rendező mezővel, bináris keresés a blokkláncon → átlagos keresési idő log2(B).",
+            "Rendezett állomány: tartomány/intervallum lekérdezésnél a kezdőpontig logaritmikus, utána a megfelelő tartomány végéig szekvenciális bejárás.",
+            "Ha a keresési kulcs ≠ rendező kulcs, akkor a rendezett állomány keresése közelít a kupacéhoz (nincs érdemi gyorsulás)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek1.pdf",
+              "pages": [6, 7, 8],
+              "note": "Kupac és rendezett állomány keresési költsége"
+            }
+          ]
+        },
+        {
+          "id": "tetel_03_b",
+          "label": "b",
+          "question": "Hogyan működik a beszúrás rendezett állományba? Milyen megközelítések vannak?",
+          "answer": "Rendezett állományba beszúrni alapból drága, mert a rendezettség megtartásához helyet kell csinálni (eltolások); tipikus javítás az overflow (gyűjtő) blokkok használata vagy üres hely hagyása és időnkénti újraszervezés.",
+          "answer_points": [
+            "Alap beszúrás: megkeressük a beszúrás helyét (keresés), majd a találati blokktól kezdve rekordokat tolunk/mozgatunk, hogy hely legyen → átlagosan ~B/2 blokk beolvasás + visszaírás, összesen ~B I/O művelet.",
+            "Gyűjtő (túlcsordulási) blokkok: a rendezett rész mellé nyitunk overflow blokk(oka)t az új rekordoknak; kereséskor a rendezett részben és a gyűjtőben is nézünk; ha a gyűjtő túl nagy, a fájlt újrarendezzük/újraszervezzük.",
+            "Üres hely hagyása: a blokkokat nem töltjük tele (pl. félig), így a legtöbb beszúrás helyben megoldható; ha betelik/határt elér, blokk-szétosztás (split) fenntartja a rendezést; tárhelyigény nő."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek1.pdf",
+              "pages": [9, 10, 11],
+              "note": "Beszúrás rendezett állományba és megközelítések"
+            }
+          ]
+        },
+        {
+          "id": "tetel_03_c",
+          "label": "c",
+          "question": "A (láncolt) statikus hasítás működése (beszúrás, törlés), példával.",
+          "answer": "Láncolt statikus hasításnál a kosarak száma K fix, a hasítófüggvény h(k)=hash(k)%K választ kosarat; beszúráskor a kosár blokkláncának végére kerül az elem (túlcsordulás blokk láncolható), törléskor a kosár láncából távolítjuk el, és az üres túlcsordulás blokkokat akár el is dobhatjuk.",
+          "answer_points": [
+            "Statikus hasító tábla: K (fix) kosár, h(k)=hash(k)%K → 0..K-1; adatbázisban egy kosár tipikusan 1 blokk + túlcsordulás blokkok lánca.",
+            "Beszúrás: kiszámítjuk a kosarat; ha van üres hely a blokkban, oda tesszük; ha nincs, túlcsordulás blokkot láncolunk és oda szúrunk.",
+            "Keresés (A=a): csak a h(a) kosár blokkláncát kell átnézni; ideális hasítófüggvénynél a lánc hossza nagyságrendileg ~B/K blokk.",
+            "Törlés: megkeressük a rekordot a kosár láncában és eltávolítjuk; a blokkon belül dönthetünk tömörítésről (mozgatás) vagy lyuk hagyásáról; üres túlcsordulás blokk megszüntethető.",
+            "Példa (vázlat): K=4, egy blokkban 2 rekord fér el. Ha sok érték ugyanabba a kosárba esik, túlcsordulás blokk(ok) keletkeznek.",
+            "Hátrány: a rekordok számának növekedésével a láncok hosszúra nőhetnek; intervallum keresésre nem jó."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek1.pdf",
+              "pages": [14, 15, 16, 17, 18, 20, 21],
+              "note": "Láncolt statikus hasítás: beszúrás, törlés, keresés és korlátok"
+            }
+          ]
+        },
+        {
+          "id": "tetel_03_d",
+          "label": "d",
+          "question": "Kiterjeszthető hasító tábla működése (beszúrás, törlés, előnyök, hátrányok stb.), példával.",
+          "answer": "A kiterjeszthető hasítás egy (2^i méretű) direktóriummal mutat kosárblokkokra; telítődéskor a kosár szétvágása (és szükség esetén a direktórium duplázása) történik, törlésnél pedig kosár-összevonás és opcionális direktórium felezés.",
+          "answer_points": [
+            "Struktúra: direktórium (mutatótömb) 2^i bejegyzéssel, ahol i a globális mélység; a h(k) k-bites kódot ad, a kód első i bitje indexel.",
+            "Lokális mélység (j): egy kosárhoz tároljuk, hány bit különbözteti meg; több direktórium-bejegyzés mutathat ugyanarra a kosár-blokkra, ha j<i.",
+            "Keresés: kód → direktórium index → 1 kosárblokk olvasása (ideális esetben a kosár 1 blokk).",
+            "Beszúrás: ha a kosárban van hely, beszúrunk; ha nincs hely → kosár split (rekordok szétosztása) és lokális mélység növelése.",
+            "Ha splitnél j<i: csak a kosárhoz tartozó direktórium-mutakat kell átállítani; ha j=i: direktórium duplázás (i:=i+1), majd split.",
+            "Törlés: rekord eltávolítása; ha a kosár és a „buddy” kosár (utolsó bitben különböző) egy blokkba fér és összevonható, merge és lokális mélység csökkentése; opcionálisan direktórium felezhető, ha minden lokális mélység < i.",
+            "Előny: keresési költség jellemzően 1 kosárblokk; nincs hosszú túlcsordulási lánc (ideális eset).",
+            "Hátrány: direktórium duplázás nagy munka (átállítás), direktórium nagyon nagyra nőhet és akár ki is lapozódhat; nem egyenletes hasításnál „feleslegesen nagy” direktórium is kialakulhat."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek1.pdf",
+              "pages": [22, 23, 25, 26, 28, 29, 30],
+              "note": "Kiterjeszthető hasítás: direktórium, split/merge és hátrányok"
+            }
+          ]
+        },
+        {
+          "id": "tetel_03_e",
+          "label": "e",
+          "question": "Lineáris hasító tábla működése (beszúrás, törlés, előnyök, hátrányok stb.), példával.",
+          "answer": "Lineáris hasításnál a kosarak száma fokozatosan, egyesével nő a telítettség (load factor) alapján; a kosár kiválasztása az utolsó i bitből számolt index szerint történik, beszúráskor szükség esetén új kosarat nyitunk és a releváns kosarat „szétnyitjuk”, törléskor pedig a túlcsordulás blokkokat és esetleg a kosarak számát is csökkenthetjük küszöbérték alatt.",
+          "answer_points": [
+            "Cél: dinamikus hasítás direktórium-duplázás nélkül; a kosarak száma lineárisan nő, túlcsordulás blokkok megengedettek.",
+            "Paraméterek (a slide jelölésével): i = használt bitek száma; n = kosarak aktuális száma; r = rekordok aktuális száma; r/n küszöb (pl. 1,7) felett új kosár kell.",
+            "Kosár kiválasztás: vegyük a hasító érték utolsó i bitjét, legyen ez m (decimálisan). Ha m<n, a rekord a m kosárba megy; ha n≤m<2^i, akkor a m kosár még nem létezik → a rekord az m−2^{i−1} kosárba kerül.",
+            "Beszúrás: r nő; ha r/n átlép küszöböt → új kosár létrehozása; ha az új kosár indexe 1a2…an, akkor a 0a2…an kosár rekordjait szétosztjuk a régi és az új kosár között (a plusz bit alapján).",
+            "Ha egy kosár blokkja megtelik és nincs új kosárnyitás (küszöb alatt), akkor túlcsordulás blokkot láncolunk.",
+            "Keresés: ugyanazzal a kosárkiválasztási szabállyal meghatározzuk a kosarat, majd átnézzük a láncot.",
+            "Törlés: rekord eltávolítása; ha túlcsordulás blokk kiürül, megszüntethető; kosárszám csökkentéshez jellemzően alsó küszöb alá esés kell, ilyenkor a legnagyobb indexű kosarat szüntetjük meg és rekordjai máshová kerülnek (nem minden törléskor ellenőrizzük).",
+            "Előny: fokozatos növekedés, nincs direktórium-duplázás; hátrány: túlcsordulás blokkok miatt a keresés költsége nem mindig 1, és sok beszúrásnál egymás után sok kosár létrehozása kellhet."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek1.pdf",
+              "pages": [31, 32, 33, 34, 35, 36, 37, 38],
+              "note": "Lineáris hasítás: beszúrás, keresés, törlés, hátrányok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Indexek (sűrű, ritka, elsődleges, másodlagos, több szintű, bittérkép index)",
+      "questions": [
+        {
+          "id": "tetel_04_a",
+          "label": "a",
+          "question": "Hogyan keresünk sűrű indexben (algoritmus, költség)?",
+          "answer": "Sűrű indexben bináris kereséssel megkeressük az indexbejegyzést, majd a mutatóval beolvassuk a megfelelő adatblokkot; a költség tipikusan log2(B_I)+1 I/O.",
+          "answer_points": [
+            "Sűrű (dense) index: minden keresési kulcshoz (vagy rekordhoz) tartozik indexbejegyzés.",
+            "Algoritmus: (1) bináris keresés az indexfájlban a keresési kulcs alapján; (2) a talált (kulcs, mutató) bejegyzésből követjük a blokkmutatót/ROWID-t és kiolvassuk a rekordot.",
+            "Ismétlődő kulcsok: több megközelítés (minden rekordhoz bejegyzés, vagy csak az első előforduláshoz bejegyzés és onnan tartomány-szerű bejárás).",
+            "Költség (egyszerű modell): log2(B_I) blokk az indexben + 1 blokk a főfájlban → log2(B_I)+1.",
+            "Megjegyzés: B_I tipikusan jóval kisebb, mint B(R), mert bf_I ≫ bf_R."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek2.pdf",
+              "pages": [7, 8, 9],
+              "note": "Sűrű index fogalma és keresési költség"
+            }
+          ]
+        },
+        {
+          "id": "tetel_04_b",
+          "label": "b",
+          "question": "Hogyan keresünk ritka indexben (algoritmus, költség)?",
+          "answer": "Ritka indexben először a fedőértéket keressük meg az indexben (legnagyobb indexkulcs ≤ keresett kulcs), majd a mutatott adatblokkban keressük a rekordot; a költség tipikusan log2(B_I)+1 I/O.",
+          "answer_points": [
+            "Ritka (sparse) index: jellemzően blokkonként 1 indexbejegyzés (nem minden kulcs szerepel).",
+            "Algoritmus: (1) bináris keresés az indexfájlban a fedőértékre (cover key): a legnagyobb olyan indexérték, ami ≤ a keresett értéknél; (2) a mutatott főfájl-blokk beolvasása; (3) keresés a blokkon belül (pl. lineárisan/beszúrási rend szerint).",
+            "Költség: log2(B_I) blokk az indexben + 1 blokk a főfájlban → log2(B_I)+1 (az index kisebb, ezért gyorsabb lehet, mint sűrűnél).",
+            "Ismétlődő kulcsok: az indexfájlban is lehetnek ismétlődések; kereséskor az első előfordulást keressük meg, utána végigmegyünk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek2.pdf",
+              "pages": [10, 11],
+              "note": "Ritka index, fedőérték és keresés"
+            }
+          ]
+        },
+        {
+          "id": "tetel_04_c",
+          "label": "c",
+          "question": "Hogyan működnek a többszintű indexek (szintek száma, keresés költsége)?",
+          "answer": "Többszintű indexnél az indexet is indexeljük, amíg a legfelső szint elfér (ideálisan 1 blokk); a szintek száma t≈log_{bf(I)} B(R), a keresés pedig t+1 blokkolvasás (ha a legfelső szint 1 blokk).",
+          "answer_points": [
+            "Ha az index nem fér el memóriában, készíthetünk „indexet az indexre” több szinten (többszintű index).",
+            "Első szint lehet ritka vagy sűrű (a főfájl rendezésétől függ), de a 2. szinttől az indexek mindig ritkák.",
+            "Szintek száma: t = log_{bf(I)} B(R) (a dián: t = log_{bf_I} B(R)).",
+            "Keresés: a legfelső szinten bináris kereséssel (mert rendezett), majd a mutatókat követjük lefelé a főfájlig.",
+            "Ha a legfelső szint 1 blokkból áll, akkor összesen t+1 blokkolvasás szükséges (t indexszint + 1 főfájl blokk)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek2.pdf",
+              "pages": [15, 16, 17],
+              "note": "Többszintű indexek: szintek száma és keresési költség"
+            }
+          ]
+        },
+        {
+          "id": "tetel_04_d",
+          "label": "d",
+          "question": "Bittérkép indexek működése (elkészítés, használat, hasznosság).",
+          "answer": "Bittérkép (bitmap) indexnél minden különböző oszlopértékhez egy N hosszú bitvektor tartozik; a lekérdezés feltételeit bitműveletekkel (AND/OR) kombináljuk, majd a 1-es bitek jelölik a találati sorokat; főleg alacsony kardinalitású, ritkán módosuló adattárházas táblákhoz jó.",
+          "answer_points": [
+            "Elkészítés: egy oszlopra N hosszú bitvektorokat készítünk (N = sorok száma); annyi bitvektor van, ahány különböző érték előfordul az oszlopban.",
+            "Egy bitvektor bitje 1, ha az adott sorban a megfelelő érték áll, különben 0.",
+            "Használat: összetett feltételek gyorsan számíthatók bitműveletekkel (pl. AND, OR), a kapott eredmény-bitvektor 1-es pozíciói adják a találatokat.",
+            "Példa: KAR='IK' AND FELVÉTEL_ÉVE IN (2018,2019) → bitmap(KAR=IK) AND (bitmap(ÉV=2018) OR bitmap(ÉV=2019)).",
+            "Hasznos, ha a tábla ritkán módosul (minden módosítás a bitvektorokat is érinti) és az oszlop kardinalitása alacsony; tipikusan adattárházaknál."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek3.pdf",
+              "pages": [25, 26, 27],
+              "note": "Bittérkép indexek működése és használata"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "B-fák",
+      "questions": [
+        {
+          "id": "tetel_05_a",
+          "label": "a",
+          "question": "A B+ fa csúcsainak (gyökér, köztes, levél) jellemzői.",
+          "answer": "A B+ fa kiegyensúlyozott (minden levél azonos mélységű), a csúcsok kulcs–mutató párokat tartalmaznak; a levelek sűrű indexként minden kulcsot tárolnak ROWID mutatókkal és láncoltak a tartomány-lekérdezéshez.",
+          "answer_points": [
+            "B+ fa: kiegyensúlyozott fa, minden út a gyökértől egy levélig azonos hosszú.",
+            "Paraméter n: egy csúcs legfeljebb n kulcsot és n+1 mutatót tartalmazhat.",
+            "Gyökércsúcs: legalább 2 használatban lévő mutató (kivéve triviális eset 1 rekordnál).",
+            "Köztes (belső) csúcsok: mutatók a következő szint csúcsaira mutatnak; legalább ceil((n+1)/2) mutató használatban; a kulcsok a mutatók által lefedett kulcstartományokat választják szét.",
+            "Levélcsúcsok: a B+ fa alsó szintje sűrű indexnek tekinthető: a levélcsúcsok minden kulcsot tartalmaznak; a mutatók ROWID-k/adatrekordokra mutatnak.",
+            "Levélcsúcs láncolás: a levélben az utolsó mutató a következő levélre mutat → intervallum-lekérdezés gyorsan, szekvenciálisan bejárható.",
+            "Telítettség: levelekben legalább floor((n+1)/2) (adatra mutató) mutató használatban; köztes csúcsokban legalább ceil((n+1)/2) mutató használatban."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek3.pdf",
+              "pages": [2, 3, 4, 5, 6],
+              "note": "B+ fa alapfogalmak és csúcsjellemzők"
+            }
+          ]
+        },
+        {
+          "id": "tetel_05_b",
+          "label": "b",
+          "question": "Hogyan keresünk B+ fában (példával)?",
+          "answer": "B+ fában kereséskor a gyökértől indulunk, minden belső csúcsban a kulcsok által meghatározott tartomány alapján kiválasztjuk a következő mutatót, majd a levélben megkeressük a kulcsot; a költség tipikusan a fa magassága + 1 blokkolvasás.",
+          "answer_points": [
+            "Keresés menete: gyökér → belső csúcsok → levél; minden lépésben kulcs-összehasonlítással választjuk ki a megfelelő gyerekmutatót.",
+            "A levélcsúcsban a kulcs(oka)t megkeressük és a ROWID mutató(k) alapján elérjük a rekord(oka)t.",
+            "Költség: blokkolvasások száma ~ t+1, ahol t a fa magassága (gyökértől a levelekig).",
+            "Intervallum lekérdezés: a kezdő kulcsot megkeressük, majd a levél-láncon haladva olvassuk a következő leveleket, amíg a tartomány véget nem ér."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek3.pdf",
+              "pages": [3, 7],
+              "note": "B+ fa keresés és költség"
+            }
+          ]
+        },
+        {
+          "id": "tetel_05_c",
+          "label": "c",
+          "question": "Beszúrás B+ fába, példával (levél és köztes csúcs osztás).",
+          "answer": "Beszúráskor megkeressük a megfelelő levelet; ha van hely, beszúrjuk a kulcsot, ha nincs, a levelet kettévágjuk és a szeparátor kulcsot felküldjük a szülőbe; ha a szülő is megtelik, ott is split történik, akár új gyökér létrehozásával.",
+          "answer_points": [
+            "1) Keressük meg a beszúrás helyét (a megfelelő levélcsúcsot).",
+            "2) Ha a levélben van üres hely: szúrjuk be az új (kulcs, mutató) párt rendezetten.",
+            "3) Ha a levél tele: levél-split – hozzunk létre új levelet, osszuk szét a kulcsokat a régi és az új levél között (kb. fele-fele), frissítsük a levéllánc mutatóit.",
+            "4) A szülőbe be kell szúrni egy új mutatót az új levélre; szeparátor kulcs tipikusan az új levél legkisebb kulcsa.",
+            "5) Ha a szülő (köztes csúcs) is tele: köztes csúcs split, majd a megfelelő (középső) kulcs felküldése a következő szintre; rekurzívan felfelé ismétlődik.",
+            "6) Gyökér split esetén új gyökér jön létre → a fa magassága 1-gyel nő."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek3.pdf",
+              "pages": [8, 12, 13],
+              "note": "B+ fa beszúrás és csúcs-szétvágás"
+            }
+          ]
+        },
+        {
+          "id": "tetel_05_d",
+          "label": "d",
+          "question": "Törlés működése a B+ fában, példával.",
+          "answer": "Törléskor megkeressük a rekordot a levélben és töröljük; ha a csúcs nem esik a minimális telítettség alá, kész, különben testvértől kölcsönzünk (redisztribúció) vagy összevonunk (merge), és szükség esetén a szülő felé rekurzívan folytatjuk.",
+          "answer_points": [
+            "1) Keressük meg a törlendő kulcsot a B+ fában és töröljük a levélcsúcsból.",
+            "2) Ha a csúcs a törlés után is „eléggé” tele (min. kulcsszám teljesül), nincs további teendő.",
+            "3) Ha alultelített: (a) redisztribúció – kölcsönkérés testvércsúcstól (azonos szülő), a szülő szeparátor kulcsai módosulhatnak; (b) merge – ha nem lehet kölcsönözni, csúcsok összevonása és a szülőből a megfelelő mutató/kulcs törlése.",
+            "4) Ha a szülő is alultelített lesz a merge után, a folyamat rekurzívan folytatódik felfelé.",
+            "5) Gyakorlatban: sok rendszer késlelteti az összevonást vagy periodikusan újraépít (kevesebb átszervezés)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_indexek3.pdf",
+              "pages": [14, 15, 16, 17, 18, 19, 20],
+              "note": "B+ fa törlés: kölcsönzés/összevonás és példák"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Műveletek költségei, méretbecslés (kiválasztás, vetítés, rendezés, halmazműveletek)",
+      "questions": [
+        {
+          "id": "tetel_06_a",
+          "label": "a",
+          "question": "Add meg a konjukciós összetett kiválasztás kiszámítási módjait.",
+          "answer": "Konjunkciós összetett kiválasztásnál (σ_{θ1∧…∧θn}) tipikusan (1) egy feltételt választunk és a többit memóriában ellenőrizzük, (2) összetett indexet használunk, vagy (3) több index eredményének metszetét (ROWID) képezzük.",
+          "answer_points": [
+            "Konjunkció: σ_{θ1 ∧ θ2 ∧ … ∧ θn}(R).",
+            "Index nélkül / egy indexszel: megbecsüljük az egyes θi feltételek költségét, kiválasztjuk a legolcsóbbat és azt hajtjuk végre először; a többi feltételt a memóriában ellenőrizzük a kiválasztott rekordokra.",
+            "Összetett (composite/concatenated) index: először azokra az oszlopokra végezzük el a kiválasztást, amelyekre van összetett index; ezután a maradék feltételeket memóriában ellenőrizzük.",
+            "Több index használata: több indexben keresünk, majd az indexekből kapott sorazonosítók (ROWID) metszetét vesszük; ezután beolvassuk a rekordokat (ha nem minden feltételhez van index, a maradékot memóriában vizsgáljuk).",
+            "Költségmodell: általában az index-keresések összege + a találati rekordok beolvasása."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [11, 12, 13],
+              "note": "Összetett (konjunkciós) kiválasztás kiértékelési módok"
+            }
+          ]
+        },
+        {
+          "id": "tetel_06_b",
+          "label": "b",
+          "question": "Add meg a diszjunkciós összetett kiválasztás kiszámítási módjait.",
+          "answer": "Diszjunkciós kiválasztásnál (σ_{θ1∨…∨θn}) ha minden feltételhez van index, az index-találatok unióját (ROWID union) képezzük; ha nincs megfelelő index-lefedettség, lineáris keresés/szkennelés szükséges.",
+          "answer_points": [
+            "Diszjunkció: σ_{θ1 ∨ θ2 ∨ … ∨ θn}(R).",
+            "Több index esetén: ha minden feltételhez tudunk indexet használni, keressük meg a megfelelő rekordokat és vegyük a sorazonosítók (ROWID) unióját.",
+            "Összetett index esetén: ha van olyan összetett index, amely minden feltételt lefed és használható, akkor használhatjuk a kereséshez.",
+            "Ha nincs megfelelő index (vagy nem mindegyik feltétel indexelhető), akkor lineáris keresést (teljes szkennelést) alkalmazunk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [14],
+              "note": "Összetett (diszjunkciós) kiválasztás kiértékelése"
+            }
+          ]
+        },
+        {
+          "id": "tetel_06_c",
+          "label": "c",
+          "question": "A kiválasztás művelet méretbecslése (egyenlőségi feltétel, intervallumra vonatkozó feltétel, összetett kiválasztás).",
+          "answer": "Méretbecslésnél jelölésekkel (N_R, bf_R, SC, V, min/max) becsüljük a kimenő sorok és blokkok számát; összetett feltételeknél gyakran függetlenséget feltételezünk (felső becslés).",
+          "answer_points": [
+            "Egyszerű egyenlőségi feltétel: σ_{A=v}(R). Becsült sorok száma: SC(A,R); becsült blokkok száma: SC(A,R)/bf_R.",
+            "Tartomány (intervallum) feltétel: σ_{A≤v}(R). Becsült sorok száma: N_R * ((v - min(A,R)) / (max(A,R) - min(A,R))) (egyenletes eloszlás feltevéssel); blokkok: (sorok)/bf_R.",
+            "Összetett konjunkció: σ_{θ1∧…∧θn}(R). Feltesszük, hogy a feltételek függetlenek; ha s_i a θi által kiválasztott sorok száma, akkor sorok ≈ N_R * Π(s_i/N_R); blokkok ≈ (sorok)/bf_R.",
+            "Összetett diszjunkció: σ_{θ1∨…∨θn}(R). A komplementerrel számolunk: P(none) = Π(1 - s_i/N_R), ezért sorok ≈ N_R * (1 - Π(1 - s_i/N_R)); blokkok ≈ (sorok)/bf_R.",
+            "Megjegyzés: a valós rendszerek gyakran statisztikákból (pl. hisztogram) becsülnek, a függetlenség csak közelítés."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [15, 16, 17],
+              "note": "Kiválasztás méretbecslés képletek"
+            }
+          ]
+        },
+        {
+          "id": "tetel_06_d",
+          "label": "d",
+          "question": "Add meg a vetítés költségét és méretbecslését.",
+          "answer": "Vetítésnél (π) a lényegi extra munka az ismétlődések megszüntetése; tipikusan (1) oszlopeldobás, (2) rendezés, (3) duplikátumok kiszűrése. A méretbecslés a V(A,R) és N_R alapján történik (felső korlát B_R).",
+          "answer_points": [
+            "Vetítés: S := π_{A1,…,Ak}(R); önmagában az oszlopok elhagyása egyszerű, de duplikátumok keletkezhetnek → δ (distinct) kell.",
+            "Költség – 1. lépés (felesleges mezők törlése): a táblát végigolvasva előállítjuk R1-et → B_R + B_{R1}.",
+            "Költség – 2. lépés (rendezés duplikátum-eltávolításhoz): R1 rendezése az összes vetített oszlop alapján → 2*B_{R1} + 2*B_{R1}*ceil(log_{M-1}(B_{R1}/M)).",
+            "Költség – 3. lépés (duplikátum törlés): a rendezett reláció egyszeri bejárása és a distinct kimenet írása → (a dián) B_R + B_{R2}.",
+            "Teljes költség (a dián): B_R + B_{R1} + 2*B_{R1} + 2*B_{R1}*ceil(log_{M-1}(B_{R1}/M)) + B_R + B_{R2}.",
+            "Méretbecslés (felső): a vetület sorainak száma ≤ N_R, blokkok száma ≤ B_R.",
+            "Ha egy oszlopra vetítünk: sorok = V(A,R) (különböző értékek); blokkok ≈ V(A,R)/bf_S.",
+            "Több oszlopra vetítés: sorok ≤ min(V(A1,R)*…*V(Ak,R), N_R); blokkok ≈ (sorok)/bf_S."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [26, 27],
+              "note": "Vetítés költsége és méretbecslés"
+            }
+          ]
+        },
+        {
+          "id": "tetel_06_e",
+          "label": "e",
+          "question": "Külső összefésülő rendezés algoritmusa.",
+          "answer": "A külső összefésülő rendezés két lépésből áll: futamok készítése (sort) M blokkonként memóriában, majd futamok M−1-es összevonása (merge) egy vagy több menetben, amíg egy rendezett futam marad.",
+          "answer_points": [
+            "Cél: ha a rendezendő reláció nem fér el a memóriában, külső rendezést használunk; leggyakoribb: external sort-merge.",
+            "Jelölés: M = pufferkészlet kapacitása blokkokban.",
+            "1) Rendezési (sort) lépés: ismételten beolvasunk M blokkot, memóriában rendezzük, és kiírjuk rendezett futamként (R_i). A futamok száma: N = ceil(B_R/M).",
+            "2) Összevonási (merge) lépés: ha N < M, akkor egy menetben összevonható: minden futamhoz 1 input puffer + 1 output puffer; mindig a legkisebb aktuális rekordot írjuk ki.",
+            "Többmenetes merge: ha N > M, akkor menetekben M−1 futamot vonunk össze (M−1 input + 1 output), amíg 1 futam marad."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [20, 21, 22, 23],
+              "note": "Külső összefésülő rendezés (sort és merge lépések)"
+            }
+          ]
+        },
+        {
+          "id": "tetel_06_f",
+          "label": "f",
+          "question": "Külső összefésülő rendezés költsége.",
+          "answer": "A külső sort-merge rendezés költsége a futamképzés és a merge menetek I/O költségeinek összege; tipikus képlet: 2*B_R + 2*B_R*ceil(log_{M−1}(B_R/M)) − B_R (ha az utolsó kiírást elhanyagoljuk).",
+          "answer_points": [
+            "Belső rendezés (ha befér memóriába): egyszer beolvasás + egyszer kiírás → 2*B_R.",
+            "Külső rendezésnél: sort fázisban B_R blokk beolvasás + kiírás → 2*B_R.",
+            "Merge fázis: minden menetben jellemzően az összes blokkot beolvassuk és kiírjuk → 2*B_R per menet.",
+            "Menetek száma (merge passok): ceil(log_{M-1}(B_R/M)).",
+            "Teljes költség (a dián): 2*B_R + 2*B_R*ceil(log_{M-1}(B_R/M)) − B_R (a −B_R az utolsó kimenet kiírásának elhanyagolására utaló korrekció a megadott modellben)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [19, 20, 23],
+              "note": "Külső rendezés alapok"
+            }
+          ]
+        },
+        {
+          "id": "tetel_06_g",
+          "label": "g",
+          "question": "Add meg az unió/különbség/metszet költségét és kimenet méretét (sorok száma, blokkok száma).",
+          "answer": "Halmazműveleteknél gyakori megoldás a rendezés + összefésülés (merge) és duplikátum-kezelés; a kimeneti méretre tipikusan felső becsléseket adunk (unió: N_R+N_S, metszet: min, különbség: ≤N_R).",
+          "answer_points": [
+            "Unió: P := R ∪ S. Kimenet (felső becslés): sorok ≤ N_R + N_S, blokkok ≤ B_R + B_S.",
+            "Unió költség (a dián): P rendezése az összes mező alapján + duplikátum törlés; teljes költség: 2*B_P + 2*B_P*ceil(log_{M-1}(B_P/M)) + B_P + B_{P1}. Felső becslés: 4*(B_R+B_S) + 2*(B_R+B_S)*ceil(log_{M-1}((B_R+B_S)/M)).",
+            "Metszet: P := R ∩ S (azonos séma esetén). Kimenet (dián megadott becslés): sorok ≈ min(N_R, N_S), blokkok ≈ min(B_R, B_S).",
+            "Különbség: P := R − S. Kimenet (dián megadott felső becslés): sorok ≈ N_R, blokkok ≈ B_R.",
+            "Megvalósítási megjegyzés: halmazműveletek tipikusan rendezéssel vagy hasítással (hash) vezethetők le; ha mindkét bemenet rendezett, a merge jellegű egy-passzos feldolgozás elég lehet."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [18, 28, 29],
+              "note": "Halmazműveletek méretbecslése és unió költsége"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "title": "Összekapcsolások költségei, méretbecslés.",
+      "questions": [
+        {
+          "id": "tetel_07_a",
+          "label": "a",
+          "question": "Egyszerű nested loops algoritmusa és költsége.",
+          "answer": "Nested-loop join esetén a külső reláció minden rekordjához végigolvassuk a belső relációt és ellenőrizzük a feltételt; általában a kisebb relációt választjuk külsőnek. A költség legrosszabb esetben N_R*B_S + B_R (R külső), legjobb esetben (ha R befér) B_R + B_S.",
+          "answer_points": [
+            "Algoritmus (vázlat): R minden rekordjára végigmegyünk S minden rekordján; ha (t_R, t_S) kielégíti a join feltételt, kiírjuk a párt.",
+            "Általánosan a kisebb relációt választjuk külső relációnak, a nagyobbat belsőnek.",
+            "Legjobb eset: ha a kisebb (külső) reláció befér a memóriába → B_R + B_S.",
+            "Legrosszabb eset: ha S-t minden R-beli rekordnál végig kell olvasni → költség a dián: N_R * B_S + B_R (R külső).",
+            "Megjegyzés: az egyszerű nested-loopot a gyakorlatban általában kerüljük, mert nagyon drága."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [31, 32, 48],
+              "note": "Nested-loop join algoritmus és költségek"
+            }
+          ]
+        },
+        {
+          "id": "tetel_07_b",
+          "label": "b",
+          "question": "Block nested-loop algoritmusa és költsége.",
+          "answer": "Block nested-loop joinnál a külső relációt blokk-csomagokban betöltjük a memóriába (B−2 blokk), és minden csomaghoz egyszer beolvassuk a belső relációt; a költség tipikusan ceil(B_R/(B−2))*B_S + B_R.",
+          "answer_points": [
+            "Ötlet: ne rekord-szinten, hanem blokkokon dolgozzunk; a külső reláció minél több blokkját töltsük be egyszerre a memóriába.",
+            "Memória: B pufferblokk esetén (B−2) blokkot használunk a külső relációhoz, 1 blokkot a belső relációhoz olvasáshoz, 1 blokkot kimenethez.",
+            "Algoritmus: külső reláció blokkjait csomagolva beolvassuk, majd a belső relációt végigszkenneljük és összevetjük a memóriában lévő csomaggal.",
+            "Költség (a dián): ceil(B_R/(B−2)) * B_S + B_R (R külső, S belső).",
+            "Különleges eset: ha a kisebb reláció befér a memóriába, a költség közel B_R + B_S."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [35, 36, 48],
+              "note": "Block nested-loop join és költségképlet"
+            }
+          ]
+        },
+        {
+          "id": "tetel_07_c",
+          "label": "c",
+          "question": "Index nested-loop join algoritmusa és költsége.",
+          "answer": "Index nested-loop joinnál a külső reláció rekordjaihoz a belső relációban indexet használunk a megfelelő sorok gyors elérésére; a költség B_R + N_R*c, ahol c egy indexelt kiválasztás költsége a belső relációban.",
+          "answer_points": [
+            "Feltétel: a belső reláción (S) legyen index az összekapcsolási attribútumon.",
+            "Algoritmus: beolvassuk R-t (külső); minden t_R esetén index-keresést végzünk S-ben a join kulcsra, és kiírjuk a találatokat.",
+            "Költség (a dián): B_R + N_R * c, ahol c a belső relációból index szerinti kiválasztás költsége.",
+            "A dián: c = HTI + SC(A,S)/bf_S = HTI + (N_S / V(A,S)) / bf_S ≈ HTI + B_S / V(A,S).",
+            "Ebből: elsődleges index + egyenletességi feltétel esetén a teljes költség ≈ B_R + N_R * (B_S / V(A,S)).",
+            "Megjegyzés: másodlagos indexnél kedvezőtlen eloszlásnál a rekordok sok külön blokkban lehetnek, így a tényleges c nagy lehet."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [37, 48],
+              "note": "Index nested-loop join költségmodell"
+            }
+          ]
+        },
+        {
+          "id": "tetel_07_d",
+          "label": "d",
+          "question": "Sort-merge join algoritmusa és költsége.",
+          "answer": "Sort-merge joinnál először rendezzük a relációkat a join kulcs szerint (ha nem rendezettek), majd egyszeri összefésüléssel haladunk a két rendezett bemeneten; a költség: rendezés(R)+rendezés(S)+B_R+B_S.",
+          "answer_points": [
+            "Algoritmus: (1) R és S rendezése az összekapcsolási mezők szerint; (2) a rendezett relációk összefésülése (két kurzor), a kisebbet léptetjük, egyezésnél kiírunk.",
+            "Költség: rendezés költsége + B_R + B_S (a rendezett relációkat egyszer végigolvasni elég).",
+            "Mikor jó választás: ha egyik vagy mindkét tábla eleve rendezett a join kulcson, ha a kimenetnek amúgy is rendezettnek kell lennie, és tipikusan egyenlőség/natúr join esetén.",
+            "Megjegyzés: a rendezés történhet explicit sort operátorral vagy index-alapú rendezett beolvasással."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [39, 40, 41],
+              "note": "Sort-merge join és költsége"
+            }
+          ]
+        },
+        {
+          "id": "tetel_07_e",
+          "label": "e",
+          "question": "Hash-join algoritmusa és költsége.",
+          "answer": "Hash joinnál ugyanazzal a hasítófüggvénnyel particionáljuk a két relációt a join attribútumon, majd azonos indexű kosárpárokat kapcsolunk össze; a tipikus I/O költség a dián: 3*(B_R+B_S), feltéve hogy a kosarak kezelhetők (beleférnek a memóriába).",
+          "answer_points": [
+            "Elv: R és S join kulcsára ugyanazt a h hasítófüggvényt alkalmazzuk; az illeszkedő rekordok azonos indexű kosárba kerülnek (R_i és S_i).",
+            "Lépések: (1) particionálás (futamok/kosarak létrehozása) mindkét relációra; (2) kosárpárok feldolgozása: R_i és S_i beolvasása és a találatok előállítása (tipikusan egy kosár befér memóriába).",
+            "Költség (a dián): 3*(B_R + B_S).",
+            "Ha egy kosárpár túl nagy (nem fér be): nested-loopot használhatunk a kosáron belül, vagy rekurzívan újra-particionálhatjuk más hasítófüggvénnyel.",
+            "Megjegyzés: nagyon nagy táblák esetén is használható; egyenlőség alapú joinokra a legtipikusabb."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [42, 43, 45],
+              "note": "Hash join működése és költsége"
+            }
+          ]
+        },
+        {
+          "id": "tetel_07_f",
+          "label": "f",
+          "question": "Összekapcsolások méretbecslése (három eset).",
+          "answer": "A join kimeneti méretét (sorok/blokkok) tipikusan a közös attribútumok, kulcs/idegen kulcs viszony és a V(A,R) képméretek alapján becsüljük; három alap eset: kartéziánus szorzat, kulcs–idegen kulcs, illetve nem-kulcs attribútum.",
+          "answer_points": [
+            "1) Ha R ∩ S = ∅, akkor R ⋈ S = R × S: sorok = N_R * N_S; blokkok = B_R * N_S + B_S * N_R.",
+            "2) Ha R ∩ S = {A} és A kulcs R-ben (S-ben idegen kulcs): sorok = N_S; blokkok = (B_R * N_S + B_S * N_R) / N_R.",
+            "3) Ha R ∩ S = {A} és A nem kulcs sem R-ben, sem S-ben: sorok ≈ (N_R * N_S) / max(V(A,R), V(A,S)); blokkok ≈ (B_R * N_S + B_S * N_R) / max(V(A,R), V(A,S)).",
+            "Speciális eset (a dián): ha R.A ⊆ S.A, akkor sorok ≈ (N_R * N_S) / V(A,S); blokkok ≈ (B_R * N_S + B_S * N_R) / V(A,S)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_fizikai_operatorok.pdf",
+              "pages": [46, 47],
+              "note": "Összekapcsolások (join) méretbecslése három esetre"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Relációs algebrai ekvivalencia szabályok.",
+      "questions": [
+        {
+          "id": "tetel_08_a",
+          "label": "a",
+          "question": "Mikor mondjuk azt, hogy két relációs algebrai kifejezés ekvivalens?",
+          "answer": "Két relációs algebrai kifejezés ekvivalens, ha bármilyen bemeneti relációkat behelyettesítve ugyanazt az eredményrelációt adják (minden adatbázisállapotra azonos kimenet).",
+          "answer_points": [
+            "Definíció: E1(r1,…,rk) és E2(r1,…,rk) ekvivalens (E1 ≅ E2), ha tetszőleges r1,…,rk relációkra E1(r1,…,rk) = E2(r1,…,rk).",
+            "Intuíció: a két kifejezés minden adatbázisállapotban ugyanazt az eredményt adja, ezért szabad egymás helyett használni (optimalizáció alapja)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [15],
+              "note": "Ekvivalencia definíció"
+            }
+          ]
+        },
+        {
+          "id": "tetel_08_b",
+          "label": "b",
+          "question": "Adjuk meg a … szabályt! (az összes szabály szerepelhet!)",
+          "answer": "Az ekvivalencia szabályok olyan átalakítások, amelyek garantálják, hogy az eredmény nem változik; a tananyagban 11 alap szabály szerepel (kommutativitás/asszociativitás, kiválasztás/vetítés „lejjebb vitele”, és unió/különbség/join viszonyok).",
+          "answer_points": [
+            "1. Kommutativitás: E1×E2 ≅ E2×E1; E1⋈E2 ≅ E2⋈E1; E1⋈_θE2 ≅ E2⋈_θE1.",
+            "2. Asszociativitás: (E1×E2)×E3 ≅ E1×(E2×E3); (E1⋈E2)⋈E3 ≅ E1⋈(E2⋈E3); hasonlóan θ-joinra.",
+            "3. Vetítések összevonása/bővítése: ha A⊆B, akkor π_A(π_B(E)) ≅ π_A(E).",
+            "4. Kiválasztások felbonthatósága/felcserélhetősége: σ_{F1∧F2}(E) ≅ σ_{F1}(σ_{F2}(E)) ≅ σ_{F2}(σ_{F1}(E)).",
+            "5. Kiválasztás és vetítés felcserélhetősége (megfelelő attribútumhalmazokkal): π_A(σ_F(E)) ≅ σ_F(π_A(E)) (ha F csak A-n értelmezett); általános esetben π_A(σ_F(E)) ≅ π_A(σ_F(π_{A∪B}(E))).",
+            "6. Kiválasztás és szorzás felcserélhetősége: ha F csak E1 attribútumain értelmezett, akkor σ_F(E1×E2) ≅ σ_F(E1)×E2; konjunkciós speciális esetek és általánosítás a dián.",
+            "7. Kiválasztás és unió felcserélhetősége: σ_F(E1∪E2) ≅ σ_F(E1) ∪ σ_F(E2).",
+            "8. Kiválasztás és kivonás felcserélhetősége: σ_F(E1−E2) ≅ σ_F(E1) − σ_F(E2) (gyakorlati gyorsítási megfontolással).",
+            "9. Kiválasztás és természetes összekapcsolás felcserélhetősége: σ_F(E1⋈E2) ≅ σ_F(E1) ⋈ σ_F(E2) (ha F a közös oszlopokra vonatkozik).",
+            "10. Vetítés és szorzás felcserélhetősége: π_A(E1×E2) ≅ π_{A1}(E1) × π_{A2}(E2), ahol A=A1∪A2.",
+            "11. Vetítés és unió felcserélhetősége: π_A(E1∪E2) ≅ π_A(E1) ∪ π_A(E2).",
+            "Megjegyzés (a dián): vetítés és kivonás általában nem cserélhető fel: π_A(E1−E2) ≇ π_A(E1) − π_A(E2)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [16, 17, 18, 19, 20, 21, 22],
+              "note": "11 ekvivalencia szabály"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Szabály alapú optimalizáció.",
+      "questions": [
+        {
+          "id": "tetel_09_a",
+          "label": "a",
+          "question": "Melyek a szabály alapú optimalizálás heurisztikus alapelvei?",
+          "answer": "A szabály alapú optimalizáció célja, hogy ekvivalens átalakításokkal várhatóan kisebb köztes relációkat kapjunk: a kiválasztásokat és vetítéseket minél lejjebb visszük, szorzás+feltételből join-t csinálunk, összevonjuk az unáris műveleteket, és keressük a közös részkifejezéseket.",
+          "answer_points": [
+            "Minél hamarabb szelektáljunk: a részkifejezések várhatóan kisebb relációk legyenek (a szigorúbb kiválasztásokat végezzük el leghamarabb).",
+            "Szorzás + kiválasztás helyett képezzünk természetes vagy feltétel alapú összekapcsolást (join), mert hatékonyabban számítható ki.",
+            "A vetítéseket vigyük minél lentebb a kifejezésfában (csökkentett oszlopszám → olcsóbb műveletek).",
+            "Vonjuk össze az egymás utáni unáris műveleteket (kiválasztásokat/vetítéseket), lehetőleg egy kiválasztás utáni vetítéssé.",
+            "Keressünk közös részkifejezéseket, hogy elég legyen egyszer kiszámolni."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [23],
+              "note": "Heurisztikus alapelvek"
+            }
+          ]
+        },
+        {
+          "id": "tetel_09_b",
+          "label": "b",
+          "question": "Add meg a szabály alapú optimalizációs algoritmus lépéseit.",
+          "answer": "A tananyagban megadott algoritmus: (1) konjunkciós kiválasztások felbontása, (2) kiválasztások lejjebb vitele megfelelő szabályokkal, (3) vetítések lejjebb vitele, (4) egymás utáni kiválasztások/vetítések összevonása.",
+          "answer_points": [
+            "INPUT: relációs algebrai kifejezés kifejezésfája; OUTPUT: optimalizált kifejezésfa.",
+            "1) A kiválasztásokat bontsuk fel a 4. szabály segítségével (σ_{F1∧F2} → σ_{F1}(σ_{F2}(...))).",
+            "2) A kiválasztásokat az 5., 6., 7., 8., 9. szabályokkal vigyük olyan mélyre a fában, amennyire csak lehet.",
+            "3) A vetítéseket a 3., 5., 10., 11. szabályokkal vigyük olyan mélyre, amennyire csak lehet (a szükséges attribútumok megtartásával).",
+            "4) Az egymás utáni kiválasztásokat és vetítéseket vonjuk össze (egy kiválasztássá / vetítéssé / kiválasztás utáni vetítéssé), ha lehetséges."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [24],
+              "note": "Szabály alapú optimalizáció lépései"
+            }
+          ]
+        },
+        {
+          "id": "tetel_09_c",
+          "label": "c",
+          "question": "Mutass részletes példát a szabály alapú optimalizáció lépéseire.",
+          "answer": "A dián szereplő példa (kv×kő×ks + kiválasztások + vetítés) lépései: konjunkció felbontása, kiválasztások lejjebb vitele (pl. dátum-feltétel a kölcsönzés táblára), szorzás+feltétel joinná alakítása, majd a vetítések bővítése és lejjebb vitele a szükséges join attribútumok megtartásával.",
+          "answer_points": [
+            "Kiinduló relációk: kv(könyv: id, szerző, cím), kő(kölcsönző: azon, név, lakcím), ks(kölcsönzés: id, azon, dátum).",
+            "Lekérdezés: „Kik és milyen könyveket kölcsönöztek 2025.10.01 után?”",
+            "Kiinduló RA (a dián): π_{cím,név}( σ_{dátum>'2025.10.01'}( σ_{kő.azon=ks.azon ∧ kv.id=ks.id}( kv × kő × ks ) ) ).",
+            "1) Kiválasztás felbontása (szabály 4): a konjunkciót külön σ-kra bontjuk (külön a két joinfeltétel, külön a dátumfeltétel).",
+            "2) Kiválasztások lejjebb vitele: a dátum>'2025.10.01' feltételt levisszük a ks relációra; a kv.id=ks.id és kő.azon=ks.azon feltételeket a megfelelő szorzatrészekre visszük és joinná alakítjuk (szorzat+σ → ⋈).",
+            "3) Vetítések lejjebb vitele/bővítése: a végső π_{cím,név} előtt olyan vetítéseket viszünk le, amelyek még tartalmazzák a joinhoz szükséges attribútumokat (pl. kv.id, ks.id, ks.azon), majd a join után visszavetítünk (szabály 3 és 10/11).",
+            "4) Egymás utáni unáris műveletek összevonása: a lejjebb vitt kiválasztásokat/vetítéseket összevonjuk, ahol lehet.",
+            "Eredmény: kisebb köztes relációk (kevesebb sor/oszlop) és join operátorok a szorzat+σ helyett → várhatóan gyorsabb végrehajtás."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [25, 26, 27, 28, 32, 33],
+              "note": "Példa szabály alapú optimalizációra"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "title": "Többtáblás lekérdezések optimalizációja.",
+      "questions": [
+        {
+          "id": "tetel_10_a",
+          "label": "a",
+          "question": "Milyen feladatként értelmezhetjük az összekapcsolási sorrend kiválasztását? Mi a lényege?",
+          "answer": "Az összekapcsolási sorrend kiválasztása dinamikus programozási feladatként fogható fel: részhalmazokra keressük a legjobb tervet, majd ezekből építjük fel az egész lekérdezés legkisebb becsült költségű join sorrendjét.",
+          "answer_points": [
+            "Több tábla esetén a join sorrend meghatározása kulcs: a köztes eredmények mérete drasztikusan változhat a sorrendtől függően.",
+            "Dinamikus programozás nézet: BestPlan(S) = min_{R∈S} (BestPlan(S\\{R}) ⋈ R) (bal-mély fák esetén tipikus felírás).",
+            "A költség becsléséhez felhasználjuk a relációk méretét, a szelektivitásokat, V(A,R)-t és a fizikai operátorok költségmodelljeit.",
+            "Lényeg: ne próbáljuk meg brute force az összes sorrendet, hanem építsünk optimális részmegoldásokból."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [38],
+              "note": "Join sorrend kiválasztása mint dinamikus programozás"
+            }
+          ]
+        },
+        {
+          "id": "tetel_10_b",
+          "label": "b",
+          "question": "Mik azok az összekapcsolási fák? Milyen típusú összekapcsolási fákat rajzolhatunk?",
+          "answer": "Az összekapcsolási fa a joinok bináris fastruktúrája, amely megadja a végrehajtási sorrendet; tipikus típusok: bal-mély (left-deep), jobb-mély (right-deep) és bozótszerű (bushy).",
+          "answer_points": [
+            "Összekapcsolási fa: a levelek az alap relációk, a belső csúcsok join műveletek; a fa alakja a join sorrendet és a köztes eredmények képzését határozza meg.",
+            "Bal-mély (left-deep): minden join jobb oldali bemenete levél; előny: gyakran pipeline-olható, kisebb köztes anyagmozgatás.",
+            "Jobb-mély (right-deep): szimmetrikus párja; bizonyos párhuzamosításoknál előnyös lehet.",
+            "Bozótszerű (bushy): mindkét oldalon lehet köztes eredmény; többféle stratégia, de több köztes materializációt igényelhet.",
+            "A tananyagban többtáblás optimalizációnál gyakran a bal-mély fákra szűkítünk (kevesebb eset, kisebb materializáció)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [35, 37],
+              "note": "Összekapcsolási fák típusai"
+            }
+          ]
+        },
+        {
+          "id": "tetel_10_c",
+          "label": "c",
+          "question": "Hány féle összekapcsolási fa lehetséges N tábla esetén?",
+          "answer": "N tábla esetén a lehetséges bináris join-fa alakok száma a T1=1, Tn=Σ_{i=1..n−1} T_i*T_{n−i} rekurzióval adható (Catalan-számok); ha a táblák sorrendje is permutálható, akkor ezt n! tényezővel szorozzuk.",
+          "answer_points": [
+            "A lehetséges join-fa alakok száma (a dián): T1 = 1; Tn = Σ_{i=1..n−1} T_i * T(n−i).",
+            "Ha a levelek (táblák) sorrendje is változhat, akkor a lehetséges esetek száma gyorsan nő (tipikusan Tn * n!).",
+            "Példa a diáról: már 6 tábla esetén is 30 240 különböző eset lehetséges.",
+            "Következmény: nem vizsgálhatjuk végig brute-force az összes joinfát, ezért kell heurisztika / dinamikus programozás / Selinger-féle DP."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [36],
+              "note": "Joinfák számossága (rekurzió és nagyságrend)"
+            }
+          ]
+        },
+        {
+          "id": "tetel_10_d",
+          "label": "d",
+          "question": "Hogyan működik a mohó algoritmus az összekapcsolási sorrend kiválasztására?",
+          "answer": "A mohó algoritmus egyszerű költségmodellel mindig a „legjobb” (legkisebb becsült költségű/méretű) join lépést választja: először kiválaszt egy legjobb relációpárt, majd a köztes eredményt mindig azzal a következő relációval kapcsolja, amellyel a költség minimális.",
+          "answer_points": [
+            "Egyszerű költségmodell (a dián): csak a köztes relációk becsült méretét/költségét nézzük, és mindig a legkisebbet választjuk.",
+            "1. lépés: válasszuk ki azt a relációpárt, amelynek összekapcsolása a legjobb (legkisebb becsült kimenet / költség).",
+            "További lépések: a bal oldali reláció a korábbi join eredménye, a jobb oldalra pedig azt a relációt választjuk, amellyel ismét minimális lesz a következő lépés költsége.",
+            "Hátrány: nem garantál globális optimumot (lokálisan jó döntések összességében lehetnek rosszak)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [40],
+              "note": "Mohó (greedy) join sorrend választás"
+            }
+          ]
+        },
+        {
+          "id": "tetel_10_e",
+          "label": "e",
+          "question": "Mi az Selinger-féle optimalizálás?",
+          "answer": "A Selinger-féle (System R) optimalizálás dinamikus programozással keres join-sorrendet és operátorokat, és az ún. „érdekes rendezettségeket” (interesting orders) is figyelembe veszi: nem csak 1 tervet tárol részhalmazokra, hanem több, később hasznos rendezésű jelöltet is.",
+          "answer_points": [
+            "Ötlet: join-sorrend kiválasztás DP-vel, de a kimeneti rendezettség is számít, mert későbbi lépésekben (pl. sort-merge join, ORDER BY) hasznos lehet.",
+            "„Érdekes” rendezettség: olyan rendezés, amit érdemes megtartani, mert későbbi operátorok költségét csökkenti.",
+            "Ezért nem csak egyetlen utat/tervet vizsgálunk, hanem az érdekes rendezettségű terveket is; a végén a legjobb (költség szerinti) tervet választjuk.",
+            "Gyakorlatban: a logikai tervből költségalapú módszerrel választjuk ki a join sorrendet és a fizikai operátorokat."
+          ],
+          "sources": [
+            {
+              "file": "ab2_rel_alg_op.pdf",
+              "pages": [41],
+              "note": "Selinger-féle optimalizálás és interesting orders"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "title": "UNDO naplózás.",
+      "questions": [
+        {
+          "id": "tetel_11_a",
+          "label": "a",
+          "question": "Add meg az UNDO naplózás U1 és U2 szabályát.",
+          "answer": "UNDO naplózásnál a log a régi értéket tárolja, és helyreállításkor a be nem fejezett tranzakciók hatását visszaírjuk; U1 a napló bejegyzés lemezre írását írja elő adat-kiírás előtt, U2 pedig a COMMIT lemezre írását csak az összes módosított adat lemezre írása után engedi.",
+          "answer_points": [
+            "UNDO napló módosító bejegyzése: <T, X, v> (v = X módosítás előtti értéke).",
+            "U1: ha a T tranzakció módosítja X-et, akkor a <T, X, v> naplóbejegyzést lemezre kell írni mielőtt X új értéke a lemezre kerülne.",
+            "U2: a <COMMIT T> naplóbejegyzést csak azután szabad lemezre írni, hogy a tranzakció által módosított összes adatbáziselem már a lemezre íródott; ezután viszont minél gyorsabban.",
+            "Intuíció: UNDO-nál a lemezen végül csak committed változások maradhatnak; a log biztosítja a visszaállításhoz a régi értéket."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [13, 14],
+              "note": "UNDO naplózás és U1/U2 szabályok"
+            }
+          ]
+        },
+        {
+          "id": "tetel_11_b",
+          "label": "b",
+          "question": "Mi a lemezre írás sorrendje UNDO naplózás esetén?",
+          "answer": "UNDO naplózásnál előbb a módosításokra vonatkozó naplóbejegyzések kerülnek lemezre, aztán a módosított adatbáziselemek, végül a COMMIT bejegyzés.",
+          "answer_points": [
+            "1) A módosításokra vonatkozó naplóbejegyzések kiírása (log force az adat előtt).",
+            "2) A módosított adatbáziselemek kiírása a lemezre.",
+            "3) A <COMMIT T> naplóbejegyzés kiírása."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [15],
+              "note": "UNDO lemezre írások sorrendje"
+            }
+          ]
+        },
+        {
+          "id": "tetel_11_c",
+          "label": "c",
+          "question": "Add meg a helyreállítás algoritmusát UNDO naplózás esetén.",
+          "answer": "UNDO helyreállításkor a naplót a végétől visszafelé olvassuk; a be nem fejezett tranzakciók módosításait visszavonjuk (régi értéket visszaírjuk), majd ABORT bejegyzéseket írunk és flusholunk.",
+          "answer_points": [
+            "A naplót a végéről kezdjük átvizsgálni (utolsó bejegyzéstől az első felé).",
+            "Nyilvántartjuk azokat a tranzakciókat, amelyekhez már láttunk <COMMIT T> vagy <ABORT T> bejegyzést (befejezettek).",
+            "Ha találunk módosító bejegyzést olyan T-hez, amely nincs a befejezettek között, akkor a módosítást semmissé tesszük: WRITE(X, régi_érték) és OUTPUT(X).",
+            "A végén minden befejezetlen tranzakcióra <ABORT T> bejegyzést írunk a naplóba, majd FLUSH LOG.",
+            "A dián szereplő pszeudókód: S = befejezettek halmaza; A = befejezetlenek halmaza; visszafelé olvasás közben a nem S tranzakciók módosításait visszaírjuk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [17, 18],
+              "note": "UNDO helyreállítás és algoritmus"
+            }
+          ]
+        },
+        {
+          "id": "tetel_11_d",
+          "label": "d",
+          "question": "Egyszerű ellenőrzőpont képzés lépései (ellenőrzőpont leállítással).",
+          "answer": "Az egyszerű (leállásos) checkpoint lényege, hogy ideiglenesen nem indítunk új tranzakciókat, megvárjuk a futók végét, majd flusholjuk a naplót és beírjuk a checkpoint bejegyzést; helyreállításkor elég a checkpointig visszamenni.",
+          "answer_points": [
+            "1) Megtiltjuk az új tranzakciók indítását.",
+            "2) Megvárjuk, amíg minden futó tranzakció véget ér (COMMIT vagy ABORT).",
+            "3) A naplót lemezre írjuk (FLUSH LOG).",
+            "4) A naplóba bejegyzést készítünk az ellenőrzőpontról (<CKPT>), majd újra FLUSH LOG.",
+            "5) Újra fogadjuk a tranzakciókat.",
+            "Helyreállítás: elég a legutolsó <CKPT> bejegyzésig visszamenni, mert előtte minden tranzakció befejeződött."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [28, 31],
+              "note": "Ellenőrzőpont leállítással"
+            }
+          ]
+        },
+        {
+          "id": "tetel_11_e",
+          "label": "e",
+          "question": "Működés közbeni ellenőrzőpont képzés UNDO esetén, helyreállítás.",
+          "answer": "Működés közbeni checkpointnál először START CKPT(active T-k) kerül a logba és flush, közben indulhatnak új tranzakciók; amikor a felsorolt aktívak befejeződtek, END CKPT kerül a logba. UNDO recovery továbbra is visszafelé olvas, de a legutolsó érvényes checkpoint kezdetéig elég visszamenni.",
+          "answer_points": [
+            "Checkpoint képzés (fuzzy) UNDO-hoz: (1) <START CKPT(T1,…,Tk)> bejegyzés a naplóba + FLUSH LOG (T1..Tk az aktuálisan aktív tranzakciók).",
+            "(2) Megvárjuk T1..Tk befejeződését úgy, hogy közben új tranzakciók indulhatnak.",
+            "(3) <END CKPT> bejegyzés a naplóba + FLUSH LOG.",
+            "Helyreállítás: a naplót továbbra is a végétől olvassuk visszafelé és a be nem fejezett tranzakciók módosításait UNDO-zzuk.",
+            "A checkpoint csak azt módosítja, meddig kell visszamenni: ha visszafelé haladva előbb találjuk az <END CKPT>-t, akkor a hozzá tartozó <START CKPT>-ig elég visszamenni.",
+            "Ha a hiba checkpoint közben történik (START van, END nincs), akkor a be nem fejezett checkpointot figyelmen kívül hagyjuk és az előző érvényes checkpoint szerint járunk el."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [32, 33, 34, 37, 38],
+              "note": "Működés közbeni checkpoint UNDO esetén és helyreállítás"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "title": "REDO naplózás.",
+      "questions": [
+        {
+          "id": "tetel_12_a",
+          "label": "a",
+          "question": "Add meg a REDO naplózás R1 szabályát.",
+          "answer": "REDO naplózásnál a log az új értéket tárolja, és helyreállításkor a committed tranzakciók hatását ismételjük; R1 előírja, hogy lemez-módosítás előtt a módosító bejegyzéseknek és a COMMIT-nak is lemezre kell kerülniük.",
+          "answer_points": [
+            "REDO módosító bejegyzés: <T, X, v> (v = X módosítás UTÁNI értéke).",
+            "R1: mielőtt az adatbázis bármely X elemét a lemezen módosítanánk, az X módosítására vonatkozó összes naplóbejegyzésnek (módosító bejegyzéseknek) és a <COMMIT T> bejegyzésnek is a lemezre kell kerülnie.",
+            "Intuíció: ha a COMMIT a lemezen van, akkor hiba után biztos, hogy a tranzakciót REDO-val vissza tudjuk állítani a naplóból."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [40],
+              "note": "REDO naplózás R1 szabály"
+            }
+          ]
+        },
+        {
+          "id": "tetel_12_b",
+          "label": "b",
+          "question": "Mi a lemezre írás sorrendje REDO naplózás esetén?",
+          "answer": "REDO naplózásnál előbb a módosító logbejegyzések, majd a COMMIT kerül lemezre, utána írjuk ki az adatot a lemezre, végül <END T> zárja le a tranzakciót a logban.",
+          "answer_points": [
+            "1) Módosító naplóbejegyzések lemezre írása.",
+            "2) <COMMIT T> naplóbejegyzés lemezre írása.",
+            "3) Az adatbáziselemek értékének cseréje a lemezen (OUTPUT).",
+            "4) <END T> bejegyzés naplóba írása, majd a napló lemezre írása (FLUSH LOG)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [41],
+              "note": "REDO lemezre írások sorrendje"
+            }
+          ]
+        },
+        {
+          "id": "tetel_12_c",
+          "label": "c",
+          "question": "Add meg a helyreállítás algoritmusát REDO naplózás esetén.",
+          "answer": "REDO helyreállításkor először meghatározzuk, mely tranzakciók committed, de még nem END-elve vannak, majd a naplót előrefelé olvasva újra végrehajtjuk (redo) ezek módosításait, végül END bejegyzéseket írunk.",
+          "answer_points": [
+            "1) Napló elemzése: feljegyezzük azokat a tranzakciókat (S halmaz), amelyekhez van <COMMIT T>, de nincs <END T>.",
+            "2) REDO fázis: a naplót a legrégibb bejegyzéstől az újabbak felé (fentről lefelé) olvassuk; ha <T, X, v> és T∈S, akkor WRITE(X,v) és OUTPUT(X).",
+            "3) A végén minden T∈S tranzakcióra <END T> naplóbejegyzést írunk.",
+            "Megjegyzés: a REDO az UNDO-hoz képest „előrefelé” dolgozik, mert az új értékeket kell visszaírnia."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [43, 44],
+              "note": "REDO helyreállítás és algoritmus"
+            }
+          ]
+        },
+        {
+          "id": "tetel_12_d",
+          "label": "d",
+          "question": "Mi a különbség a REDO és a módosított REDO napló között?",
+          "answer": "A módosított REDO a tankönyvi változatban nem használ <END T> bejegyzést; helyette helyreállításkor a be nem fejezett tranzakciókat <ABORT T>-tal jelöli, míg a committed tranzakciók módosításait újra végrehajtja.",
+          "answer_points": [
+            "„Sima” REDO: használ <END T> naplóbejegyzést, ami jelzi, hogy a tranzakció módosításai és a kapcsolódó logbejegyzések is lemezen vannak.",
+            "Módosított REDO (Ullman): nem használ <END T>-t a befejezett tranzakciókra; helyette a recovery végén a be nem fejezett tranzakciókat jelöljük <ABORT T>-tal.",
+            "Módosított REDO recovery vázlat: (1) meghatározzuk a committed tranzakciókat (<COMMIT> van); (2) a logot elejétől végéig olvasva a committed tranzakciók módosításait redo-zzuk; (3) minden be nem fejezett tranzakcióra <ABORT T> bejegyzést írunk és flusholunk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [45, 46],
+              "note": "Módosított REDO napló"
+            }
+          ]
+        },
+        {
+          "id": "tetel_12_e",
+          "label": "e",
+          "question": "Ellenőrzőpont képzés REDO esetén, helyreállítás.",
+          "answer": "REDO esetén a checkpoint célja, hogy a committed tranzakciók módosításai a checkpoint végére biztosan lemezen legyenek; működés közbeni checkpointnál START CKPT(active) + flush, majd a korábban már committed tranzakciók piszkos puffereinek kiírása, végül END CKPT. Recovery a legutolsó érvényes checkpointból indulva csak a releváns tranzakciókat redo-zza.",
+          "answer_points": [
+            "A dián: REDO-nál nincs értelme a leállásos (egyszerű) checkpointnak → csak működés közbeni checkpointot használunk.",
+            "Checkpoint képzés: (1) <START CKPT(T1,…,Tk)> + FLUSH LOG (Tk az aktív tranzakciók).",
+            "(2) Kiírjuk lemezre az összes olyan adatbáziselemet (piszkos puffert), amelyet olyan tranzakciók írtak, amelyek a START CKPT pillanatában már befejeződtek, de a pufferük még nem került lemezre.",
+            "(3) <END CKPT> + FLUSH LOG.",
+            "Recovery: ha a legutolsó checkpoint teljes (van END), akkor elég a START CKPT-ben felsorolt aktív tranzakciókat és az utána indultakat figyelembe venni; ha a hiba a checkpoint alatt történt (START van, END nincs), akkor vissza kell menni az előző érvényes END CKPT/START CKPT párig (vagy a log elejéig)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [52, 53, 54, 55],
+              "note": "REDO checkpoint és recovery példák"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "title": "UNDO/REDO naplózás.",
+      "questions": [
+        {
+          "id": "tetel_13_a",
+          "label": "a",
+          "question": "Add meg az UNDO/REDO naplózás UR1 szabályát.",
+          "answer": "UNDO/REDO naplózásnál a log a régi és az új értéket is tárolja; UR1 a WAL-elv: mielőtt egy adatbáziselem lemezen módosul, a módosító logbejegyzésnek lemezen kell lennie.",
+          "answer_points": [
+            "UNDO/REDO módosító bejegyzés: <T, X, u, v> (u = régi érték, v = új érték).",
+            "UR1: mielőtt az adatbázis bármely X elemét a lemezen módosítanánk egy T tranzakció módosítása miatt, a módosító bejegyzésnek a lemezre kell kerülnie (Write-Ahead Logging).",
+            "Megjegyzés: a COMMIT bejegyzés a lemezen történő adat-módosítás előtt vagy után is megjelenhet (szemben tiszta UNDO/REDO-val)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [57],
+              "note": "UNDO/REDO napló és UR1 szabály"
+            }
+          ]
+        },
+        {
+          "id": "tetel_13_b",
+          "label": "b",
+          "question": "Add meg az UNDO/REDO naplózás UR2 szabályát.",
+          "answer": "UR2 előírja, hogy a <COMMIT T> bejegyzést azonnal lemezre kell írni, amint a naplóban megjelenik, hogy hiba esetén ne veszítsük el a committed státuszt.",
+          "answer_points": [
+            "Probléma: ha a tranzakció már befejeződött, adat a lemezen van, de a COMMIT bejegyzés még nem került lemezre, hiba után a recovery tévesen UNDO-zna committed tranzakciót.",
+            "UR2: a <COMMIT T> naplóbejegyzést azonnal a lemezre kell írni, amint megjelenik a naplóban (log force commit)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [61],
+              "note": "UR2 szabály motivációval"
+            }
+          ]
+        },
+        {
+          "id": "tetel_13_c",
+          "label": "c",
+          "question": "Add meg a helyreállítás algoritmusát UNOD/REDO naplózás esetén.",
+          "answer": "UNDO/REDO recovery két irányú: a be nem fejezett tranzakciókat visszafelé UNDO-zzuk (régi értékek), a befejezetteket előrefelé REDO-zzuk (új értékek); a checkpoint a szükséges log-szakaszt rövidíti.",
+          "answer_points": [
+            "Alapelv: REDO – a legkorábbitól kezdve állítsuk helyre minden befejezett tranzakció hatását; UNDO – a legutolsótól kezdve tegyük semmissé minden be nem fejezett tranzakciót.",
+            "Recovery vázlat (a dián):",
+            "1) A napló végétől visszafelé az utolsó érvényes checkpoint kezdetéig: meghatározzuk a befejezett tranzakciók halmazát (S), és UNDO-zzuk azokat, amelyek nincsenek S-ben.",
+            "2) Az ellenőrzőpont kezdetekor aktív tranzakciók hatását semmissé tesszük (csak azokat, amelyek nincsenek S-ben).",
+            "3) Az utolsó érvényes checkpoint kezdetétől a napló végéig előrefelé haladva: REDO-zzuk az S tranzakcióinak a hatását (új értékek visszaírása).",
+            "Megjegyzés: a log <T,X,régi,új> formátuma lehetővé teszi mindkét irányú helyreállítást."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [58, 63],
+              "note": "UNDO/REDO recovery elvek és lépések"
+            }
+          ]
+        },
+        {
+          "id": "tetel_13_d",
+          "label": "d",
+          "question": "Ellenőrzőpont képzés UNOD/REDO esetén, helyreállítás.",
+          "answer": "UNDO/REDO checkpointnál START CKPT(active) + flush után kiírjuk az összes piszkos puffert, majd END CKPT + flush; recovery a legutolsó érvényes checkpointtól indul, előbb UNDO-zza az uncommitted tranzakciókat, majd REDO-zza a committedeket.",
+          "answer_points": [
+            "Checkpoint képzés (a dián): (1) <START CKPT(T1,…,Tk)> naplóba + FLUSH LOG, ahol T1..Tk az aktív tranzakciók.",
+            "(2) Kiírjuk lemezre az összes piszkos puffert (módosított adatbáziselemeket tartalmazó blokkokat).",
+            "(3) <END CKPT> naplóba + FLUSH LOG.",
+            "Helyreállítás: a legutolsó érvényes checkpointból indulva a dián leírt 3 lépéses (hátra UNDO, majd előre REDO) algoritmus szerint.",
+            "Ha a hiba END CKPT előtt történt (csak START van), akkor a checkpointot figyelmen kívül hagyjuk és az előző érvényes checkpointot keressük."
+          ],
+          "sources": [
+            {
+              "file": "ab2_naplozas.pdf",
+              "pages": [62, 63, 66],
+              "note": "UNDO/REDO checkpoint és helyreállítás"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "title": "Ütemezések (soros, sorbarendezhető, konfliktusok, megelőzési gráf stb.).",
+      "questions": [
+        {
+          "id": "tetel_14_a",
+          "label": "a",
+          "question": "Mit nevezünk konfliktusnak?",
+          "answer": "Konfliktus két (külön tranzakcióbeli) műveletpár, amely ugyanarra az adatbáziselemre vonatkozik és legalább az egyik írás; a sorrendjük felcserélése megváltoztatná a tranzakciók viselkedését.",
+          "answer_points": [
+            "Konfliktuspár: olyan egymást követő műveletek, amelyek sorrendjének felcserélése megváltoztatná legalább az egyik tranzakció viselkedését.",
+            "Két különböző tranzakció műveletei akkor konfliktusosak, ha (1) ugyanarra az adatbáziselemre vonatkoznak, és (2) legalább az egyik művelet írás.",
+            "Tipikus konfliktusok: w_i(X); w_j(X) (írás–írás), w_i(X); r_j(X) (írás–olvasás), r_i(X); w_j(X) (olvasás–írás), i≠j."
+          ],
+          "sources": [
+            {
+              "file": "ab2_konkurenciakezeles.pdf",
+              "pages": [13, 14],
+              "note": "Konfliktus definíció"
+            }
+          ]
+        },
+        {
+          "id": "tetel_14_b",
+          "label": "b",
+          "question": "Mit nevezünk sorbarendezhető és konfliktus-sorbarendezhető ütemezésnek?",
+          "answer": "Sorbarendezhető (serializable) ütemezés az, amely bármely kezdeti állapotra ugyanazt a hatást adja, mint valamely soros ütemezés; konfliktus-sorbarendezhető (conflict-serializable) pedig az, amely konfliktus-ekvivalens egy soros ütemezéssel.",
+          "answer_points": [
+            "Soros (serial) ütemezés: a tranzakciók műveletei nem interleavelődnek, teljesen egymás után futnak.",
+            "Sorbarendezhető (serializable) ütemezés: hatása megegyezik valamely soros ütemezés hatásával, függetlenül a kezdeti adatbázisállapottól.",
+            "Konfliktus-ekvivalencia: két ütemezés konfliktusekvivalens, ha nem konfliktusos szomszédcserék sorozatával egymásba alakíthatók.",
+            "Konfliktus-sorbarendezhető (conflict-serializable): konfliktusekvivalens valamely soros ütemezéssel.",
+            "Megjegyzés: konfliktus-sorbarendezhetőség elégséges, de nem szükséges feltétel a sorbarendezhetőségre."
+          ],
+          "sources": [
+            {
+              "file": "ab2_konkurenciakezeles.pdf",
+              "pages": [11, 17, 24, 26],
+              "note": "Serializable és conflict-serializable definíciók"
+            }
+          ]
+        },
+        {
+          "id": "tetel_14_c",
+          "label": "c",
+          "question": "Mi az a megelőzési gráf?",
+          "answer": "A megelőzési (precedence) gráf egy irányított gráf, amelynek csúcsai a tranzakciók; Ti→Tj él akkor van, ha Ti egyik konfliktusos művelete megelőzi Tj megfelelő konfliktusos műveletét az ütemezésben.",
+          "answer_points": [
+            "Csúcsok: az ütemezés tranzakciói (T1, T2, …).",
+            "Irányított él Ti→Tj: ha van olyan konfliktusos műveletpár (op_i(X), op_j(X)) az ütemezésben, ahol op_i(X) megelőzi op_j(X)-et.",
+            "Jelölés a dián: Ti <_S Tj, ha Ti megelőzi Tj-t az S ütemezésben; ez élként jelenik meg a gráfban."
+          ],
+          "sources": [
+            {
+              "file": "ab2_konkurenciakezeles.pdf",
+              "pages": [24, 25],
+              "note": "Megelőzési gráf definíció"
+            }
+          ]
+        },
+        {
+          "id": "tetel_14_d",
+          "label": "d",
+          "question": "Hogyan működik a megelőzési gráf, mire használjuk?",
+          "answer": "A megelőzési gráf a konfliktusos sorrend-kényszereket modellezi; konfliktus-sorbarendezhetőség tesztjére használjuk: akkor és csak akkor konfliktus-sorbarendezhető egy ütemezés, ha a gráf körmentes, és bármely topologikus sorrend egy ekvivalens soros sorrendet ad.",
+          "answer_points": [
+            "Felépítés: végigmegyünk az ütemezésen, és minden konfliktusos műveletpár (Ti művelete megelőzi Tj-ét) alapján élt rajzolunk Ti→Tj.",
+            "Teszt: ha a megelőzési gráf tartalmaz irányított kört, akkor az ütemezés nem konfliktus-sorbarendezhető; ha körmentes, akkor konfliktus-sorbarendezhető.",
+            "Topologikus sorrend: körmentes gráf csúcsainak olyan rendezése, hogy minden él iránya „előre mutat”; ez a sorrend megad egy konfliktusekvivalens soros tranzakciósorrendet.",
+            "Mire jó: gyors sorbarendezhetőség-ellenőrzés (a gyakorlatban gyakran konfliktus-sorbarendezhetőséget ellenőriznek)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_konkurenciakezeles.pdf",
+              "pages": [26],
+              "note": "Precedence graph teszt és topologikus sorrend"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 15,
+      "title": "Zárak (jogszerűség, konzisztencia, 2PL, várakozási gráf, holtpont).",
+      "questions": [
+        {
+          "id": "tetel_15_a",
+          "label": "a",
+          "question": "Mit jelent a jogszerűség, konzisztencia?",
+          "answer": "Konzisztens tranzakció zárolás szempontból: minden olvasás/írás előtt van lock és utána unlock ugyanarra az elemre; jogszerű ütemezés: ugyanazon adatelemen a zárak egymással kompatibilisek, azaz a szabályok szerint nem lehet egyszerre ütköző zárakat fenntartani.",
+          "answer_points": [
+            "Tranzakció konzisztenciája (zárolási értelemben): ha Ti-ben van r_i(X) vagy w_i(X), akkor előtte szerepel l_i(X), utána u_i(X), és a lock és az olvasás/írás között nincs u_i(X).",
+            "Ütemezés jogszerűsége (egyféle zárnál): ha van l_i(X) és utána l_j(X) (i≠j), akkor a kettő között lennie kell u_i(X)-nek (egyszerre két tranzakció nem zárolhatja ugyanazt az elemet).",
+            "Osztott/kizárólagos (S/X) záraknál: jogszerűség azt jelenti, hogy vagy egy tranzakció tart X zárat, vagy több tranzakció tarthat S zárat, de a kettő együtt nem lehet.",
+            "Cél: a tranzakciók ne olvassanak/írjanak zárolás nélkül, és a zárak alapján kialakuló ütemezés ne legyen „tiltott” (inkompatibilis)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [5, 6, 29],
+              "note": "Konzisztencia és jogszerűség definíciók"
+            }
+          ]
+        },
+        {
+          "id": "tetel_15_b",
+          "label": "b",
+          "question": "Mit nevezünk kétfázisú zárolásnak?",
+          "answer": "Kétfázisú zárolás (2PL) esetén egy tranzakcióban minden zárkérés megelőzi az összes zárfeloldást: van növekedési fázis (csak lock) és csökkenő fázis (csak unlock).",
+          "answer_points": [
+            "Definíció: a tranzakcióban minden zárolási művelet megelőzi az összes zárfeloldási műveletet.",
+            "1. fázis (növekedési fázis): zárak kiadása (lock műveletek).",
+            "2. fázis (csökkenő fázis): zárak feloldása (unlock műveletek); amint egy zárat feloldottunk, több zárat már nem kérhetünk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [11],
+              "note": "2PL definíció"
+            }
+          ]
+        },
+        {
+          "id": "tetel_15_c",
+          "label": "c",
+          "question": "A kétfázisú zárolás tétele.",
+          "answer": "A 2PL tétele szerint a konzisztens, kétfázisú zárolású tranzakciók bármely jogszerű ütemezése konfliktus-sorbarendezhető (átalakítható konfliktusekvivalens soros ütemezéssé).",
+          "answer_points": [
+            "Tétel: konzisztens, kétfázisú zárolású tranzakciók bármely jogszerű ütemezése konfliktusekvivalens soros ütemezéssé alakítható → konfliktus-sorbarendezhető.",
+            "Intuíció: a 2PL zárfeloldási pontjai olyan sorrend-kényszereket hoznak létre, amelyekből körmentes megelőzési struktúra adódik (a dián indukciós bizonyítás).",
+            "Következmény: a 2PL biztosítja a sorbarendezhetőséget, de holtpontot okozhat (várakoztatás miatt)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [13, 14, 15],
+              "note": "2PL tétel"
+            }
+          ]
+        },
+        {
+          "id": "tetel_15_d",
+          "label": "d",
+          "question": "Mi az a várakozási gráf?",
+          "answer": "A várakozási (waits-for) gráf egy irányított gráf, amelynek csúcsai tranzakciók; Ti→Tj él akkor van, ha Ti egy olyan zárra vár, amit Tj tart fenn.",
+          "answer_points": [
+            "Csúcsok: tranzakciók.",
+            "Él Ti→Tj: Ti vár egy zár elengedésére, amit Tj tart éppen.",
+            "A gráf dinamikusan változik az ütemezés során (ahogy zárakat kérnek/kapnak/feloldanak).",
+            "Felhasználás: holtpont felismerése (kör keresése)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [19],
+              "note": "Várakozási gráf definíció"
+            }
+          ]
+        },
+        {
+          "id": "tetel_15_e",
+          "label": "e",
+          "question": "Hogyan segít a várakozási gráf a holtpont felismerésében?",
+          "answer": "A várakozási gráfban akkor és csak akkor van holtpont, ha a gráfban irányított kör található; ezért a holtpont felismeréséhez ciklus-ellenőrzést végzünk, és kör esetén egy tranzakció abortálásával feloldjuk a holtpontot.",
+          "answer_points": [
+            "Tétel (a dián): adott pillanatban pontosan akkor nincs holtpont, ha az adott pillanathoz tartozó várakozási gráfban nincs irányított kör.",
+            "Felismerés: időközönként felrajzoljuk/frissítjük a várakozási gráfot és ciklust keresünk benne.",
+            "Megszüntetés (optimista megközelítés): ha kör van, akkor a körben lévő egyik tranzakciót ABORT-áljuk (áldozatválasztás szempontjai: futási idő, végrehajtott műveletek száma, zárolt elemek száma stb.).",
+            "Ha nincs kör, akkor a tranzakciók topologikus sorrendben le tudnak futni (holtpont nélkül)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [20, 21],
+              "note": "Holtpont felismerés waits-for gráffal"
+            }
+          ]
+        },
+        {
+          "id": "tetel_15_f",
+          "label": "f",
+          "question": "Mit nevezünk a csúcsok topologikus sorrendjének?",
+          "answer": "Topologikus sorrend egy körmentes irányított gráf csúcsainak olyan rendezése, hogy minden él (a→b) esetén a csúcs a megelőzi b-t a sorrendben.",
+          "answer_points": [
+            "Definíció: egy irányított körmentes gráf csúcsainak topologikus sorrendje olyan csúcsrendezés, amelyben minden a→b élre a csúcs megelőzi b csúcsot.",
+            "Felhasználás: precedence graph esetén topologikus sorrend ad konfliktusekvivalens soros sorrendet; waits-for graph esetén körmentesség → nincs holtpont."
+          ],
+          "sources": [
+            {
+              "file": "ab2_konkurenciakezeles.pdf",
+              "pages": [26],
+              "note": "Topologikus sorrend definíció"
+            },
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [20],
+              "note": "Topologikus rendezés holtpont-érvelésben"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "title": "További zármódok (osztott, kizárólagos, növelési, módosítási, kompatibilitási mátrix, felminősítés).",
+      "questions": [
+        {
+          "id": "tetel_16_a",
+          "label": "a",
+          "question": "Hogyan működik a zárolás, ha két típusú zárunk van (osztott és kizárólagos)?",
+          "answer": "Két zármódnál (S/X) az olvasáshoz osztott (S), az íráshoz kizárólagos (X) zár kell; több S zár kompatibilis egymással, de X zár senkivel sem kompatibilis, ezért íráskor egyedül kell lennünk az adatelemen.",
+          "answer_points": [
+            "Osztott (S) zár: olvasás engedélyezett; több tranzakció tarthat S zárat ugyanazon elemen egyszerre.",
+            "Kizárólagos (X) zár: írás (és olvasás) engedélyezett, de csak egy tranzakció tarthatja; más S/X zár nem lehet mellette.",
+            "Kompatibilitás: S–S kompatibilis; S–X, X–S és X–X nem kompatibilis.",
+            "Jogszerű ütemezés: vagy egyetlen tranzakció X zárral, vagy több tranzakció S zárral; keverés tiltott.",
+            "Gyakori művelet: felminősítés (S→X), ha olvasás után írni szeretnénk – ez várakozást és holtpontot is okozhat."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [29, 31],
+              "note": "S/X zárolás és kompatibilitási mátrix"
+            }
+          ]
+        },
+        {
+          "id": "tetel_16_b",
+          "label": "b",
+          "question": "Mi az a kompatibilitási mátrix, mire használhatjuk?",
+          "answer": "A kompatibilitási mátrix egy táblázat, ami megmondja, hogy egy adott adatelemen a már kiadott zármód(ok) mellett egy új zárkérés (mód) engedélyezhető-e; a zárkezelő erre támaszkodva dönt a megadásról vagy várakoztatásról.",
+          "answer_points": [
+            "A mátrixnak minden zármódhoz van sora és oszlopa: sor = már kiadott zár, oszlop = kért zár.",
+            "Szabály: egy A adatelemen C módú zár akkor engedélyezhető, ha minden már fennálló R mód mellett a mátrix (R,C) cellája „igen”.",
+            "Használat: a zárolási ütemező a mátrix alapján (1) megadja a zárat, vagy (2) várakoztatja a tranzakciót (queue).",
+            "Kapcsolódás: a várakoztatásból felrajzolható a várakozási gráf (deadlock detektálás), illetve a kompatibilitási mátrix alapján precedence graph is definiálható."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [31, 32],
+              "note": "Kompatibilitási mátrix definíció és használat"
+            }
+          ]
+        },
+        {
+          "id": "tetel_16_c",
+          "label": "c",
+          "question": "Hogyan működik a zárak felminősítése?",
+          "answer": "Felminősítéskor egy tranzakció egy meglévő (gyengébb) zárát erősebbre cseréli (pl. S→X); a felminősítés gyakran várakozást igényel, és új holtpontokat okozhat, ezért speciális stratégiákkal (pl. módosítási zár U) kezeljük.",
+          "answer_points": [
+            "Felminősítés (upgrade): a tranzakció egy L1 zárját egy erősebb L2 zárrá változtatja (L2 erősebb, ha minden tiltáshelyen legalább olyan szigorú, mint L1).",
+            "Tipikus példa: S→X, amikor olvasás után írni akarunk.",
+            "Probléma: két tranzakció tarthat S zárat, majd mindkettő felminősítene X-re → egymásra várhatnak (új típusú holtpont).",
+            "Kezelés: felminősítések priorizálása (pl. priority to upgrading), vagy módosítási zár (U) használata a deadlock elkerülésére."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [35, 38, 52],
+              "note": "Felminősítés és holtpont-problémák"
+            }
+          ]
+        },
+        {
+          "id": "tetel_16_d",
+          "label": "d",
+          "question": "Mire jó a növelési művelet és a növelési zár?",
+          "answer": "A növelési (INC) műveletnél a tranzakció csak növeli/csökkenti egy értékét, és ezek a növelések egymással kommutálnak; a növelési zár (I) lehetővé teszi több tranzakció egyidejű növelését ugyanazon adatelemen anélkül, hogy olvasás/írás történhetne rajta.",
+          "answer_points": [
+            "INC(X,c) művelet: READ(X,t); t:=t+c; WRITE(X,t); ahol c konstans.",
+            "A növelések (inc) egymással kommutálnak: inc_i(X) és inc_j(X) nem konfliktusos egymással, de konfliktusosak r_j(X) és w_j(X) műveletekkel (i≠j).",
+            "Növelési zár (I / increment lock): inc művelet végzéséhez szükséges; önmagában nem enged olvasást vagy írást, csak növelést.",
+            "Kompatibilitás (a dián): I kompatibilis I-vel, de nem kompatibilis S-sel és X-szel.",
+            "Haszon: sok „számláló jellegű” frissítésnél nagyobb párhuzamosság érhető el, mintha minden növeléshez X zár kellene."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [42, 43, 44],
+              "note": "Növelési művelet és növelési zár (I)"
+            }
+          ]
+        },
+        {
+          "id": "tetel_16_e",
+          "label": "e",
+          "question": "Mi az a módosító zár?",
+          "answer": "A módosítási (update) zár (U) egy olyan zármód, ami olvasást enged, de úgy viselkedik, hogy később biztonságosan felminősíthető X-re; célja az S→X felminősítésből adódó holtpontok elkerülése.",
+          "answer_points": [
+            "Módosítási zár jelölése: ul_i(X) (U lock).",
+            "Tulajdonság: U zár csak olvasást enged X-en; írásra nem. Később csak a módosítási zár minősíthető fel X-re, az osztott zár (S) nem.",
+            "Miért kell: felminősítés (S→X) holtpontot okozhat két olvasó tranzakciónál; U zárral már a legelején „lefoglaljuk” a későbbi írás lehetőségét.",
+            "Kompatibilitási mátrix (a dián): kiadott S mellett kért U lehet „igen”, de kiadott U mellett más zárak (S/X/U) nem engedélyezettek; a mátrix nem szimmetrikus.",
+            "Intuíció: amikor kérjük, a U sokszor S-hez hasonló, de amikor megvan, inkább X-szerűen korlátoz."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [39, 40, 41],
+              "note": "Módosítási (update) zár és kompatibilitási mátrix"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "title": "Zárolási ütemező, hierarchikus zárak, időbélyegzés és érvényesítés (zártábla, faprotokoll, szemcsézettség, figyelmeztető zárak).",
+      "questions": [
+        {
+          "id": "tetel_17_a",
+          "label": "a",
+          "question": "Hogyan működik a zárolási ütemező?",
+          "answer": "A zárolási ütemező (lock-based scheduler) a tranzakciók adat-hozzáférései elé zárolási műveleteket illeszt, és a zártábla + kompatibilitási szabályok alapján eldönti, hogy egy zárkérés megadható-e vagy várakoztatni kell; commit/abort esetén feloldja a zárakat és felébreszti a várakozókat.",
+          "answer_points": [
+            "Feladat: csak olyan kéréseket engedélyezni, amelyek jogszerű ütemezést eredményeznek.",
+            "Model (a dián): az ütemező I. része a tranzakciók műveletei elé beszúrja a megfelelő LOCK műveletet (READ/WRITE/INC elé), és továbbítja a II. résznek.",
+            "A II. rész végrehajtja a műveleteket: ha zárolás, akkor a zártábla alapján ellenőrzi a kompatibilitást → megadja a zárat vagy késlelteti (várakozás).",
+            "Commit/abort esetén az I. rész feloldja a tranzakció által tartott zárakat; a várakozó tranzakciókat a felszabaduló zárak alapján ütemezi (pl. FIFO, shared-priority, upgrade-priority).",
+            "Megjegyzés: a zárolás pesszimista megközelítés: késleltet, de ritkábban kell abortálni (kivéve holtpont)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [7, 45, 46, 47, 52],
+              "note": "Zárolási ütemező modell és működés"
+            }
+          ]
+        },
+        {
+          "id": "tetel_17_b",
+          "label": "b",
+          "question": "Mi az a zártábla? Hogyan épül fel?",
+          "answer": "A zártábla (lock table) a zárolási állapotot tároló adatstruktúra: csak a ténylegesen zárolt adatelemek szerepelnek benne, elemenként egy bejegyzéssel, amely tartalmazza a csoportos módot (legerősebb fennálló zár), várakozási bitet és a tranzakciók listáját (megkapta-e vagy vár).",
+          "answer_points": [
+            "Zártábla: segíti a döntést, hogy egy zárkérés megadható-e; nem feltétlen reláció (lehet pl. hasító tábla).",
+            "Csak azok az adatelemek szerepelnek, amelyekre épp van kiadva zár.",
+            "Bejegyzés fő elemei: (1) csoportos mód (a legerősebb zár az adott elemen: pl. S, U, X), (2) waiting bit (van-e várakozó), (3) lista a tranzakciókról (zár módja, vár-e, pointerek).",
+            "A lista tartalmazhat: Tranzakció azonosító, zármód, várakozik-e, következő elem mutatók (a dián: Köv., Tköv.).",
+            "Használat: zárkérésnél bejegyzés keresése és kompatibilitás ellenőrzése; zárfeloldásnál lista frissítése és várakozók esetén új zárak engedélyezése."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [48, 49, 50, 51],
+              "note": "Zártábla felépítése és használata"
+            }
+          ]
+        },
+        {
+          "id": "tetel_17_c",
+          "label": "c",
+          "question": "Mit jelent a zárak szemcsézettsége?",
+          "answer": "A zárak szemcsézettsége (granularity) azt jelenti, hogy milyen „méretű” adategységet zárolunk (adatbázis/tábla/blokk/sor/oszlop); nagy szemcsézettség kevés zár és kisebb overhead, de kisebb párhuzamosság, kis szemcsézettség több zár és nagyobb overhead, de nagyobb konkurencia.",
+          "answer_points": [
+            "Szemcsézettség: az a hierarchia-szint (adategység), amelyre zárat helyezünk el.",
+            "Példák hierarchiára: adatbázis → tábla → blokk (page) → sor (tuple) → oszlop.",
+            "Trade-off: nagy szemcsézettségű zár → kevés zár, olcsóbb kezelés, de tranzakciók kevésbé futhatnak párhuzamosan; kis szemcsézettségű zár → nagyobb párhuzamosság, de sok zár bejegyzés és nagyobb adminisztrációs költség.",
+            "Motiváció: ha csak táblaszintű zár van, akkor egyetlen sor frissítése is az egész táblát blokkolná; ezért kell több szemcsézettségi szint.",
+            "Megoldás: hierarchikus zárolás és figyelmeztető (intention) zárak."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [53, 56],
+              "note": "Szemcsézettség (granularity) motiváció és trade-off"
+            }
+          ]
+        },
+        {
+          "id": "tetel_17_d",
+          "label": "d",
+          "question": "Hogyan működik a figyelmeztető protokoll?",
+          "answer": "A figyelmeztető (intention) protokoll hierarchikus zárolásnál a felsőbb szinteken IS/IX (és SIX) zárakkal jelzi, hogy a tranzakció a leszármazottakon S/X zárat akar; így a konfliktusok „lejjebb” kerülnek, és a rendszer biztonságosan keverhet különböző szemcsézettségű zárakat.",
+          "answer_points": [
+            "Alapötlet: a hagyományos S/X zárak mellett figyelmeztető zárakat használunk: IS (intention shared) és IX (intention exclusive).",
+            "Zárolás menete: a hierarchia gyökerénél kezdünk; ha lejjebb akarunk zárolni, akkor a felső csomópontokra figyelmeztető zárat kérünk (S cél esetén IS, X cél esetén IX), majd lefelé haladunk; a célcsomóponton kérjük az S vagy X zárat.",
+            "Kompatibilitás (a dián): IS kompatibilis IS/IX/S-sel, de nem X-szel; IX kompatibilis IS/IX-szel, de nem S/X-szel; S kompatibilis IS/S-sel, de nem IX/X-szel; X senkivel sem kompatibilis.",
+            "SIX: csoportos módként szolgál, ha egy tranzakciónak S és IX is van az elemen (S+IX kombináció).",
+            "Szabályok (a dián): először a gyökeret zároljuk; S/IS-hez a szülőn IX vagy IS kell; X/IX/SIX-hez a szülőn IX vagy SIX kell; 2PL betartása; zárat csak akkor engedünk el egy csúcson, ha a gyerekeit már nem zároljuk.",
+            "Hatás: a konfliktusok tipikusan a hierarchia mélyebb szintjén jelentkeznek, így több párhuzamosság érhető el."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [57, 58, 60, 67, 68],
+              "note": "Figyelmeztető protokoll (intention locks) és szabályai"
+            }
+          ]
+        },
+        {
+          "id": "tetel_17_e",
+          "label": "e",
+          "question": "Mire használjuk a faprotokollt? Hogyan működik?",
+          "answer": "A faprotokoll fa-struktúrájú adatok (pl. B+ fa csúcsok) konkurens használatára szolgál: csak akkor zárolhatunk egy csúcsot, ha a szülője már zárolt; a zárakat bármikor feloldhatjuk, de újrazárolni nem szabad. Ez sorbarendezhetőséget ad holtpont nélkül, bár nem feltétlenül 2PL.",
+          "answer_points": [
+            "Motiváció: fa struktúráknál (pl. indexfa) a szigorú 2PL túl korai/erős zárolásokat okozhat; kell egy speciális protokoll, ami holtpont nélkül is biztosít sorbarendezhetőséget.",
+            "Faprotokoll szabályai (egy zármóddal, de kiterjeszthető): (1) az első zárat bárhová elhelyezheti a tranzakció; (2) később csak akkor kaphat zárat egy csúcson, ha van zárja a csúcs szülőjén; (3) zárat bármikor fel lehet oldani; (4) nem lehet újrazárolni (ha elengedte, később nem kérheti újra).",
+            "Tétel: ha minden tranzakció követi a faprotokollt egy jogszerű ütemezésben, akkor az ütemezés sorbarendezhető, noha nem feltétlenül 2PL.",
+            "Eredmény: fa struktúrák konkurensebben használhatók, és a protokoll holtpontmentességet is ad (a zárolási mintázat miatt)."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [75, 76],
+              "note": "Faprotokoll szabályai és tétele"
+            }
+          ]
+        },
+        {
+          "id": "tetel_17_f",
+          "label": "f",
+          "question": "Hogyan biztosítható a sorbarendezhetőség időbélyegzéssel?",
+          "answer": "Időbélyegzéses ütemezésnél minden tranzakció kap egy növekvő TS(T) időbélyegzőt; minden adatelemhez RT(X) és WT(X) időbélyeget tartunk, és a read/write kéréseket csak akkor engedélyezzük, ha nem sértik a TS szerinti soros (timestamp order) végrehajtást, különben a tranzakciót abortáljuk (és új időbélyeggel újraindítjuk).",
+          "answer_points": [
+            "TS(T): a tranzakció indításakor kiosztott egyedi, növekvő időbélyeg (óra vagy számláló alapján).",
+            "Minden adatelemhez: RT(X) = legnagyobb TS, aki olvasta; WT(X) = legnagyobb TS, aki írta; a dián egy C(X) commit bit is szerepel a piszkos olvasás elkerülésére.",
+            "Olvasás szabály (intuíció): ha TS(T) < WT(X), akkor T „túl későn” olvasna (egy későbbi tranzakció által írt értéket látna), ezért abort; különben engedélyezés és RT(X) frissítése.",
+            "Írás szabály (intuíció): ha TS(T) < RT(X) vagy TS(T) < WT(X), akkor T „túl későn” írna (megsértené a TS szerinti soros rendet), ezért abort; különben engedélyezés és WT(X) frissítése.",
+            "Piszkos olvasás kezelése (a dián): ha C(X) hamis (a legutóbbi író még nem commitált), akkor az olvasást késleltethetjük, hogy ne legyen dirty read.",
+            "Hatás: a kialakított ütemezés sorbarendezhető, a soros sorrend a TS növekvő sorrendje; konfliktus esetén a tranzakciót abortáljuk és új TS-sel újraindítjuk."
+          ],
+          "sources": [
+            {
+              "file": "ab2_zarak.pdf",
+              "pages": [79, 80, 83, 87],
+              "note": "Időbélyegzéses konkurenciavezérlés (timestamp ordering)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
