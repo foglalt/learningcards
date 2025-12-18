@@ -663,7 +663,7 @@
     "id": "beugro_46",
     "number": 46,
     "question": "Milyen költségmodellt használunk relációs algebrai optimalizálás esetében?",
-    "answer": "Blokk I/O alapú költségmodellt használunk (olvasások/írások számát).",
+    "answer": "Részkifejezések költségein alapuló modell.",
     "sources": [
       {
         "file": "ab2_rel_alg_op.pdf",
@@ -771,7 +771,7 @@
     "id": "beugro_54",
     "number": 54,
     "question": "Miért érdemes hamarabb szelektálni relációs algebrai optimalizálás esetén?",
-    "answer": "Mert csökkenti a köztes eredmények méretét, így kevesebb I/O-val olcsóbb lesz a további feldolgozás.",
+    "answer": "Mert csökkenti a köztes eredmények méretét, így olcsóbb lesz a további feldolgozás.",
     "sources": [
       {
         "file": "ab2_rel_alg_op.pdf",
@@ -799,7 +799,7 @@
     "id": "beugro_56",
     "number": 56,
     "question": "Miért érdemes az unáris műveletek összevonni relációs algebrai optimalizálás  esetén?",
-    "answer": "Kevesebb művelet/pásztázás kell (pl. szelekciók és vetítések összevonása/tologatása), így kisebb a költség.",
+    "answer": "Kevesebb művelet kell (pl. szelekciók és vetítések összevonása/tologatása), így kisebb a költség.",
     "sources": [
       {
         "file": "ab2_rel_alg_op.pdf",
@@ -810,7 +810,7 @@
   {
     "id": "beugro_57",
     "number": 57,
-    "question": "Miért érdemes a közös részkifejezéseket megkeresni relációs algebrai  optimalizálás esetén?",
+    "question": "Miért érdemes a közös részkifejezéseket megkeresni relációs algebrai optimalizálás esetén?",
     "answer": "A közös részt elég egyszer kiszámolni és újra felhasználni, így csökken a teljes költség.",
     "sources": [
       {
@@ -1267,7 +1267,7 @@
     "id": "beugro_88",
     "number": 88,
     "question": "Mi a soros ütemezés hátránya?",
-    "answer": "Hátránya: nincs párhuzamosság, ezért rosszabb teljesítmény/átbocsátás.",
+    "answer": "Nincs párhuzamosság, ezért rosszabb teljesítmény/átbocsátás.",
     "sources": [
       {
         "file": "ab2_konkurenciakezeles.pdf",
