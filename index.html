@@ -9,13 +9,32 @@
 <body>
   <header class="app-header">
     <div class="app-title">Learning Cards</div>
-    <button id="btnHome" class="btn btn-ghost" type="button" aria-label="Vissza a kezdőképernyőre">Kezdőlap</button>
+    <button id="btnHome" class="btn btn-ghost" type="button" aria-label="Vissza a kezdőképernyőre" hidden>Kezdőlap</button>
   </header>
 
   <main class="app" id="app">
     <section id="screenStart" class="screen" aria-label="Kezdőképernyő">
       <h1 class="h1">Gyakorlás</h1>
       <p class="muted">Válaszd ki, mit szeretnél gyakorolni, majd indulhat a kártyázás.</p>
+
+      <div class="stats panel" aria-label="Kérdések száma">
+        <div class="stats-title">Kérdések száma</div>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-k">Beugró</div>
+            <div id="countBeugro" class="stat-v">–</div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">Tételek</div>
+            <div id="countTetelek" class="stat-v">–</div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">Összes</div>
+            <div id="countTotal" class="stat-v">–</div>
+          </div>
+        </div>
+        <p class="muted small" id="deckStatsError" role="status" aria-live="polite"></p>
+      </div>
 
       <div class="card panel">
         <div class="field">
@@ -30,7 +49,47 @@
           </label>
         </div>
 
+        <div class="field">
+          <div class="label">Kategória (tudásszint)</div>
+          <label class="radio">
+            <input type="radio" name="knowledgeFilter" value="all" checked />
+            <span>Minden</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="knowledgeFilter" value="0" />
+            <span>Nem tudtam</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="knowledgeFilter" value="1" />
+            <span>Részben</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="knowledgeFilter" value="2" />
+            <span>Tudtam</span>
+          </label>
+        </div>
+
+        <div class="mini-stats" aria-label="Haladás a tudásszintek szerint">
+          <div class="label">Haladás (kiválasztott kérdéssor)</div>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-k">Nem tudtam</div>
+              <div id="countNoClue" class="stat-v">–</div>
+            </div>
+            <div class="stat">
+              <div class="stat-k">Részben</div>
+              <div id="countPartial" class="stat-v">–</div>
+            </div>
+            <div class="stat">
+              <div class="stat-k">Tudtam</div>
+              <div id="countKnown" class="stat-v">–</div>
+            </div>
+          </div>
+          <p class="muted small" id="progressStatsError" role="status" aria-live="polite"></p>
+        </div>
+
         <div class="row">
+          <button id="btnContinue" class="btn" type="button" hidden>Folytatás</button>
           <button id="btnStart" class="btn btn-primary" type="button">Indítás</button>
           <button id="btnReset" class="btn" type="button">Haladás törlése</button>
         </div>
@@ -54,6 +113,12 @@ python -m http.server 5173</pre>
       <div class="topline">
         <div id="deckLabel" class="pill">–</div>
         <div id="cardLabel" class="muted small" aria-live="polite">–</div>
+      </div>
+
+      <div class="pillrow" aria-label="Tudásszint statisztika" aria-live="polite">
+        <div id="studyCountNoClue" class="pill pill-secondary">Nem tudtam: –</div>
+        <div id="studyCountPartial" class="pill pill-secondary">Részben: –</div>
+        <div id="studyCountKnown" class="pill pill-secondary">Tudtam: –</div>
       </div>
 
       <article id="flashcard" class="flashcard" tabindex="0" role="button" aria-label="Kártya megfordítása">

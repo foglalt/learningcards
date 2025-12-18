@@ -5,16 +5,33 @@ const PATHS = {
 
 const STORAGE_PREFIX = "learningcards.v1";
 
+let deckCache = {
+  beugro: /** @type {Card[]|null} */ (null),
+  tetelek: /** @type {Card[]|null} */ (null),
+};
+
 const el = {
   btnHome: document.getElementById("btnHome"),
   screenStart: document.getElementById("screenStart"),
   screenStudy: document.getElementById("screenStudy"),
   btnStart: document.getElementById("btnStart"),
+  btnContinue: document.getElementById("btnContinue"),
   btnReset: document.getElementById("btnReset"),
   startError: document.getElementById("startError"),
+  countBeugro: document.getElementById("countBeugro"),
+  countTetelek: document.getElementById("countTetelek"),
+  countTotal: document.getElementById("countTotal"),
+  deckStatsError: document.getElementById("deckStatsError"),
+  countNoClue: document.getElementById("countNoClue"),
+  countPartial: document.getElementById("countPartial"),
+  countKnown: document.getElementById("countKnown"),
+  progressStatsError: document.getElementById("progressStatsError"),
 
   deckLabel: document.getElementById("deckLabel"),
   cardLabel: document.getElementById("cardLabel"),
+  studyCountNoClue: document.getElementById("studyCountNoClue"),
+  studyCountPartial: document.getElementById("studyCountPartial"),
+  studyCountKnown: document.getElementById("studyCountKnown"),
   studyError: document.getElementById("studyError"),
 
   flashcard: document.getElementById("flashcard"),
@@ -38,11 +55,16 @@ let state = {
   current: /** @type {Card|null} */ (null),
   showingAnswer: false,
   lastIds: /** @type {string[]} */ ([]),
-  progress: /** @type {Record<string, { box: number, due: number, seen: number }>} */ ({}),
+  progress: /** @type {Record<string, { box: number, due: number, seen: number, grade?: 0|1|2 }>} */ ({}),
+  knowledgeFilter: /** @type {null|0|1|2} */ (null),
 };
 
 function storageKey(deck) {
   return `${STORAGE_PREFIX}.progress.${deck}`;
+}
+
+function sessionKey() {
+  return `${STORAGE_PREFIX}.session`;
 }
 
 function nowMs() {
@@ -53,19 +75,161 @@ function clampInt(v, min, max) {
   return Math.max(min, Math.min(max, v | 0));
 }
 
+function normalizeGrade(progress) {
+  const grade = progress?.grade;
+  if (grade === 0 || grade === 1 || grade === 2) return grade;
+
+  // Backward-compat: infer from existing Leitner-ish state.
+  const seen = clampInt(progress?.seen ?? 0, 0, 1_000_000);
+  if (seen <= 0) return 0;
+
+  const box = clampInt(progress?.box ?? 1, 1, 5);
+  if (box >= 2) return 2;
+
+  return 0;
+}
+
+function cardMatchesKnowledgeFilter(card) {
+  if (state.knowledgeFilter === null) return true;
+  const p = state.progress[card.id];
+  return normalizeGrade(p) === state.knowledgeFilter;
+}
+
 function showScreen(name) {
   const isStart = name === "start";
   el.screenStart.classList.toggle("hidden", !isStart);
   el.screenStudy.classList.toggle("hidden", isStart);
+  el.btnHome.hidden = isStart;
 }
 
 function setError(where, msg) {
   where.textContent = msg || "";
 }
 
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(sessionKey());
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const deck = parsed.deck === "tetelek" ? "tetelek" : parsed.deck === "beugro" ? "beugro" : null;
+    if (!deck) return null;
+
+    const knowledgeFilter =
+      parsed.knowledgeFilter === 0 || parsed.knowledgeFilter === 1 || parsed.knowledgeFilter === 2 ? parsed.knowledgeFilter : null;
+
+    const cardId = typeof parsed.cardId === "string" ? parsed.cardId : null;
+    const showingAnswer = Boolean(parsed.showingAnswer);
+    const lastIds = Array.isArray(parsed.lastIds) ? parsed.lastIds.filter((x) => typeof x === "string").slice(0, 3) : [];
+    const savedAt = Number.isFinite(parsed.savedAt) ? Number(parsed.savedAt) : 0;
+
+    return { deck, knowledgeFilter, cardId, showingAnswer, lastIds, savedAt };
+  } catch {
+    return null;
+  }
+}
+
+function saveSession() {
+  if (!state.deck) return;
+  try {
+    localStorage.setItem(
+      sessionKey(),
+      JSON.stringify({
+        deck: state.deck,
+        knowledgeFilter: state.knowledgeFilter,
+        cardId: state.current?.id ?? null,
+        showingAnswer: Boolean(state.showingAnswer),
+        lastIds: Array.isArray(state.lastIds) ? state.lastIds.slice(0, 3) : [],
+        savedAt: nowMs(),
+      }),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+function setRadioValue(name, value) {
+  const input = document.querySelector(`input[name='${name}'][value='${value}']`);
+  if (input instanceof HTMLInputElement) input.checked = true;
+}
+
+function updateContinueUi() {
+  if (!el.btnContinue) return;
+  el.btnContinue.hidden = !loadSession();
+}
+
+function restoreStartFromSession() {
+  const session = loadSession();
+  if (!session) {
+    updateContinueUi();
+    return;
+  }
+
+  setRadioValue("deck", session.deck);
+  const filterValue = session.knowledgeFilter === null ? "all" : String(session.knowledgeFilter);
+  setRadioValue("knowledgeFilter", filterValue);
+  updateContinueUi();
+}
+
 function getSelectedDeck() {
   const checked = document.querySelector("input[name='deck']:checked");
   return checked?.value === "tetelek" ? "tetelek" : "beugro";
+}
+
+function getSelectedKnowledgeFilter() {
+  const checked = document.querySelector("input[name='knowledgeFilter']:checked");
+  const v = checked?.value;
+  if (v === "0") return /** @type {0} */ (0);
+  if (v === "1") return /** @type {1} */ (1);
+  if (v === "2") return /** @type {2} */ (2);
+  return null;
+}
+
+function computeKnowledgeCounts(cards, progress) {
+  /** @type {{0: number, 1: number, 2: number}} */
+  const counts = { 0: 0, 1: 0, 2: 0 };
+  for (const c of cards) {
+    const grade = normalizeGrade(progress?.[c.id]);
+    counts[grade] += 1;
+  }
+  return counts;
+}
+
+function updateStartKnowledgeStats() {
+  if (!el.countNoClue || !el.countPartial || !el.countKnown || !el.progressStatsError) return;
+
+  const deck = getSelectedDeck();
+  const cards = deckCache[deck];
+
+  setError(el.progressStatsError, "");
+  el.countNoClue.textContent = "–";
+  el.countPartial.textContent = "–";
+  el.countKnown.textContent = "–";
+
+  if (!cards) return;
+
+  const progress = loadProgress(deck);
+  const counts = computeKnowledgeCounts(cards, progress);
+  el.countNoClue.textContent = String(counts[0]);
+  el.countPartial.textContent = String(counts[1]);
+  el.countKnown.textContent = String(counts[2]);
+}
+
+function updateStudyKnowledgeStats() {
+  if (!el.studyCountNoClue || !el.studyCountPartial || !el.studyCountKnown) return;
+
+  if (!state.deck || !state.cards.length) {
+    el.studyCountNoClue.textContent = "Nem tudtam: –";
+    el.studyCountPartial.textContent = "Részben: –";
+    el.studyCountKnown.textContent = "Tudtam: –";
+    return;
+  }
+
+  const counts = computeKnowledgeCounts(state.cards, state.progress);
+  el.studyCountNoClue.textContent = `Nem tudtam: ${counts[0]}`;
+  el.studyCountPartial.textContent = `Részben: ${counts[1]}`;
+  el.studyCountKnown.textContent = `Tudtam: ${counts[2]}`;
 }
 
 function compressPages(pages) {
@@ -162,25 +326,29 @@ function ensureProgressForCards(cards) {
   for (const c of cards) {
     if (!c?.id) continue;
     if (!state.progress[c.id]) {
-      state.progress[c.id] = { box: 1, due: now, seen: 0 };
+      state.progress[c.id] = { box: 1, due: now, seen: 0, grade: 0 };
     } else {
       // sanitize
       const p = state.progress[c.id];
       p.box = clampInt(p.box ?? 1, 1, 5);
       p.due = Number.isFinite(p.due) ? p.due : now;
       p.seen = clampInt(p.seen ?? 0, 0, 1_000_000);
+      p.grade = normalizeGrade(p);
     }
   }
 }
 
 function pickNextCard() {
   const now = nowMs();
-  const candidates = state.cards.filter((c) => {
+  const allowed = state.cards.filter(cardMatchesKnowledgeFilter);
+  if (!allowed.length) return null;
+
+  const candidates = allowed.filter((c) => {
     const p = state.progress[c.id];
     return p && p.due <= now;
   });
 
-  const pool = candidates.length ? candidates : state.cards;
+  const pool = candidates.length ? candidates : allowed;
   const recent = new Set(state.lastIds);
 
   // Weighted random: lower box => higher weight.
@@ -220,8 +388,10 @@ function setCurrentCard(card) {
   el.cardLabel.textContent = card ? cardLabel(card) : "–";
 
   if (card?.id) {
-    state.lastIds = [card.id, ...state.lastIds].slice(0, 3);
+    state.lastIds = [card.id, ...state.lastIds.filter((id) => id !== card.id)].slice(0, 3);
   }
+
+  saveSession();
 }
 
 function flipCard() {
@@ -229,6 +399,7 @@ function flipCard() {
   state.showingAnswer = !state.showingAnswer;
   el.flashcard.classList.toggle("is-flipped", state.showingAnswer);
   el.ratingRow.hidden = !state.showingAnswer;
+  saveSession();
 }
 
 function applyRating(rating) {
@@ -236,6 +407,7 @@ function applyRating(rating) {
   const id = state.current.id;
   const p = state.progress[id] ?? { box: 1, due: nowMs(), seen: 0 };
   p.seen = clampInt((p.seen ?? 0) + 1, 0, 1_000_000);
+  p.grade = rating === 0 || rating === 1 || rating === 2 ? rating : normalizeGrade(p);
 
   const now = nowMs();
 
@@ -257,6 +429,7 @@ function applyRating(rating) {
 
   state.progress[id] = p;
   saveProgress();
+  updateStudyKnowledgeStats();
 
   nextCard();
 }
@@ -264,7 +437,8 @@ function applyRating(rating) {
 function nextCard() {
   const next = pickNextCard();
   if (!next) {
-    setError(el.studyError, "Nincs elérhető kártya.");
+    const msg = state.knowledgeFilter === null ? "Nincs elérhető kártya." : "Nincs kártya ebben a kategóriában.";
+    setError(el.studyError, msg);
     return;
   }
   setError(el.studyError, "");
@@ -276,6 +450,35 @@ async function loadDeck(deck) {
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`Nem sikerült betölteni: ${path}`);
   return await res.json();
+}
+
+async function updateDeckCounts() {
+  if (!el.countBeugro || !el.countTetelek || !el.countTotal || !el.deckStatsError) return;
+
+  setError(el.deckStatsError, "");
+  el.countBeugro.textContent = "–";
+  el.countTetelek.textContent = "–";
+  el.countTotal.textContent = "–";
+
+  try {
+    const [rawBeugro, rawTetelek] = await Promise.all([loadDeck("beugro"), loadDeck("tetelek")]);
+    const beugroCards = normalizeBeugro(rawBeugro);
+    const tetelekCards = normalizeTetelek(rawTetelek);
+    deckCache.beugro = beugroCards;
+    deckCache.tetelek = tetelekCards;
+
+    const beugroCount = beugroCards.length;
+    const tetelekCount = tetelekCards.length;
+
+    el.countBeugro.textContent = String(beugroCount);
+    el.countTetelek.textContent = String(tetelekCount);
+    el.countTotal.textContent = String(beugroCount + tetelekCount);
+    updateStartKnowledgeStats();
+  } catch {
+    deckCache.beugro = null;
+    deckCache.tetelek = null;
+    setError(el.deckStatsError, "Nem sikerült betölteni a statisztikát. Indíts helyi szervert (lásd lent).");
+  }
 }
 
 function normalizeBeugro(json) {
@@ -320,12 +523,18 @@ function normalizeTetelek(json) {
   return cards;
 }
 
-async function startStudy(deck) {
+async function startStudy(deck, knowledgeFilter, resume) {
   setError(el.startError, "");
   setError(el.studyError, "");
 
   state.deck = deck;
-  el.deckLabel.textContent = deck === "beugro" ? "Beugró" : "Tételek";
+  state.knowledgeFilter = knowledgeFilter ?? null;
+  const baseLabel = deck === "beugro" ? "Beugró" : "Tételek";
+  const filterLabel =
+    state.knowledgeFilter === null
+      ? ""
+      : ` · ${state.knowledgeFilter === 0 ? "Nem tudtam" : state.knowledgeFilter === 1 ? "Részben" : "Tudtam"}`;
+  el.deckLabel.textContent = `${baseLabel}${filterLabel}`;
 
   try {
     const raw = await loadDeck(deck);
@@ -340,8 +549,28 @@ async function startStudy(deck) {
     ensureProgressForCards(cards);
     saveProgress();
 
+    state.lastIds = Array.isArray(resume?.lastIds) ? resume.lastIds.filter((x) => typeof x === "string").slice(0, 3) : [];
+
+    if (state.knowledgeFilter !== null) {
+      const allowed = cards.filter(cardMatchesKnowledgeFilter);
+      if (!allowed.length) {
+        throw new Error("Ebben a kategóriában még nincs kártya. Válassz \"Minden\"-t, majd értékeld a kártyákat.");
+      }
+    }
+
     showScreen("study");
-    nextCard();
+    updateStudyKnowledgeStats();
+
+    const resumeCardId = typeof resume?.cardId === "string" ? resume.cardId : null;
+    const resumeCard = resumeCardId ? cards.find((c) => c.id === resumeCardId) : null;
+
+    if (resumeCard && cardMatchesKnowledgeFilter(resumeCard)) {
+      setCurrentCard(resumeCard);
+      if (resume?.showingAnswer) flipCard();
+      setError(el.studyError, "");
+    } else {
+      nextCard();
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     setError(el.startError, msg);
@@ -356,6 +585,7 @@ function resetProgress() {
     // ignore
   }
   setError(el.startError, "Haladás törölve ehhez a kérdéssorhoz.");
+  updateStartKnowledgeStats();
 }
 
 // Events
@@ -365,15 +595,33 @@ el.btnHome.addEventListener("click", () => {
   state.current = null;
   state.lastIds = [];
   state.progress = {};
+  state.knowledgeFilter = null;
   showScreen("start");
+  updateStartKnowledgeStats();
+  updateContinueUi();
 });
 
 el.btnStart.addEventListener("click", () => {
   const deck = getSelectedDeck();
-  startStudy(deck);
+  const knowledgeFilter = getSelectedKnowledgeFilter();
+  startStudy(deck, knowledgeFilter);
+});
+
+el.btnContinue?.addEventListener("click", () => {
+  const session = loadSession();
+  if (!session) {
+    setError(el.startError, "Nincs mentett munkamenet.");
+    updateContinueUi();
+    return;
+  }
+  startStudy(session.deck, session.knowledgeFilter, session);
 });
 
 el.btnReset.addEventListener("click", resetProgress);
+
+document.querySelectorAll("input[name='deck']").forEach((input) => {
+  input.addEventListener("change", updateStartKnowledgeStats);
+});
 
 el.flashcard.addEventListener("click", () => flipCard());
 
@@ -389,4 +637,6 @@ el.btnRate1.addEventListener("click", () => applyRating(1));
 el.btnRate2.addEventListener("click", () => applyRating(2));
 
 // Init
+restoreStartFromSession();
 showScreen("start");
+void updateDeckCounts();

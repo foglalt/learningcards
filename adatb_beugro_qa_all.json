@@ -155,7 +155,7 @@
     "id": "beugro_11",
     "number": 11,
     "question": "Mit nevezünk egyenletességi feltételnek a lekérdezések esetén?",
-    "answer": "Scan sharing (szinkronizált szkennelés): több lekérdezés megoszthatja ugyanazt a beolvasást/kurzort; Oracle-ben ez csak teljesen azonos lekérdezéseknél engedett.",
+    "answer": "A=a feltételnek eleget tévő rekordok száma nagyjából egyforma az „a”-tól függetlenül, azaz az adatok egyenletesen oszlanak el a kulcsértékek között.",
     "sources": [
       {
         "file": "ab2_fizikai_tarolas.pdf",
@@ -167,7 +167,7 @@
     "id": "beugro_12",
     "number": 12,
     "question": "Milyen algoritmussal kereshetünk rendezett állományban?",
-    "answer": "A lift (elevator/SCAN) algoritmussal: a fej egy irányba halad, kiszolgálja az útjába eső kéréseket, majd a végén visszafordul.",
+    "answer": "Bináris/logaritmikus keresés (ha a rendező mező és a kereső mező megegyezik).",
     "sources": [
       {
         "file": "ab2_fizikai_tarolas.pdf",
@@ -215,7 +215,7 @@
     "id": "beugro_15",
     "number": 15,
     "question": "Mit nevezünk dinamikus hasításnak?",
-    "answer": "Dinamikus hasítás: a kosarak száma a fájl növekedésével változhat (kosár felosztás/új kosár nyitás).",
+    "answer": "Dinamikus hasítás: a kosarak száma a fájl növekedésével vagy csökkenésével változhat.",
     "sources": [
       {
         "file": "ab2_indexek1.pdf",
@@ -307,7 +307,7 @@
     "id": "beugro_21",
     "number": 21,
     "question": "Lineáris hasító index esetén mikor nyitunk meg új kosarat?",
-    "answer": "Amikor a terhelés átlépi a kitöltési küszöböt (pl. 80%), az ütemező új kosarat nyit (split).",
+    "answer": "Amikor a terhelés (rekordok száma / kosarak száma) átlépi a kitöltési küszöböt (pl 80%), az ütemező új kosarat nyit (split).",
     "sources": [
       {
         "file": "ab2_indexek1.pdf",
@@ -335,7 +335,7 @@
     "id": "beugro_23",
     "number": 23,
     "question": "Mit nevezünk elsődleges indexnek?",
-    "answer": "Elsődleges index: a tábla fizikai rendezési kulcsára épül (a rekordok a kulcs szerint rendezettek), és tipikusan csak egy lehet.",
+    "answer": "A tábla fizikai rendezési kulcsára épül (a rekordok a kulcs szerint rendezettek), és csak egy lehet belőle.",
     "sources": [
       {
         "file": "ab2_indexek2.pdf",
@@ -351,7 +351,7 @@
     "id": "beugro_24",
     "number": 24,
     "question": "Mit nevezünk másodlagos indexnek?",
-    "answer": "Másodlagos index: nem a fizikai rendezési kulcson van; a rekordok nincsenek ezen a kulcson rendezve, ezért több találathoz mutatólista tartozhat.",
+    "answer": "A főfájl nem rendezett a keresési kulcs szerint. A másodlagos index szerkezetét tekintve mindig sűrű, mert így érhető el rendezetten az összes adat. Egy relációhoz több másodlagos indexet is készíthetünk.",
     "sources": [
       {
         "file": "ab2_indexek2.pdf",
@@ -375,7 +375,7 @@
     "id": "beugro_26",
     "number": 26,
     "question": "Mit nevezünk ritka indexnek?",
-    "answer": "Ritka index: csak bizonyos rekordokhoz/blokkokhoz van bejegyzés (pl. blokkonként az első kulcs); rendezett fájlhoz használható.",
+    "answer": "Ritka index: csak bizonyos rekordokhoz/blokkokhoz van bejegyzés (fedő érték); rendezett fájlhoz használható.",
     "sources": [
       {
         "file": "ab2_indexek2.pdf",
