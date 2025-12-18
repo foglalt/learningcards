@@ -115,10 +115,11 @@ python -m http.server 5173</pre>
         <div id="cardLabel" class="muted small" aria-live="polite">–</div>
       </div>
 
-      <div class="pillrow" aria-label="Tudásszint statisztika" aria-live="polite">
-        <div id="studyCountNoClue" class="pill pill-secondary">Nem tudtam: –</div>
-        <div id="studyCountPartial" class="pill pill-secondary">Részben: –</div>
-        <div id="studyCountKnown" class="pill pill-secondary">Tudtam: –</div>
+      <div class="pillrow" aria-label="Tudásszint szűrő" aria-live="polite">
+        <button id="studyFilterAll" class="pill pill-secondary pill-btn is-active" type="button" aria-pressed="true">Minden</button>
+        <button id="studyCountNoClue" class="pill pill-secondary pill-btn" type="button" aria-pressed="false">Nem tudtam: –</button>
+        <button id="studyCountPartial" class="pill pill-secondary pill-btn" type="button" aria-pressed="false">Részben: –</button>
+        <button id="studyCountKnown" class="pill pill-secondary pill-btn" type="button" aria-pressed="false">Tudtam: –</button>
       </div>
 
       <article id="flashcard" class="flashcard" tabindex="0" role="button" aria-label="Kártya megfordítása">

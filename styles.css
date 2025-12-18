@@ -248,6 +248,26 @@ input[type="radio"] { accent-color: var(--primary); }
 
 .pill-secondary { background: rgba(255,255,255,0.03); }
 
+.pill-btn {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.pill-btn:hover { background: rgba(255,255,255,0.06); }
+
+.pill-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+.pill-btn.is-active {
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(37, 99, 235, 0.55);
+}
+
 .pillrow {
   display: flex;
   flex-wrap: wrap;

@@ -29,6 +29,7 @@ const el = {
 
   deckLabel: document.getElementById("deckLabel"),
   cardLabel: document.getElementById("cardLabel"),
+  studyFilterAll: document.getElementById("studyFilterAll"),
   studyCountNoClue: document.getElementById("studyCountNoClue"),
   studyCountPartial: document.getElementById("studyCountPartial"),
   studyCountKnown: document.getElementById("studyCountKnown"),
@@ -93,6 +94,52 @@ function cardMatchesKnowledgeFilter(card) {
   if (state.knowledgeFilter === null) return true;
   const p = state.progress[card.id];
   return normalizeGrade(p) === state.knowledgeFilter;
+}
+
+function knowledgeFilterText(filter) {
+  if (filter === 0) return "Nem tudtam";
+  if (filter === 1) return "Részben";
+  if (filter === 2) return "Tudtam";
+  return "";
+}
+
+function updateDeckLabel() {
+  if (!state.deck) return;
+  const baseLabel = state.deck === "beugro" ? "Beugró" : "Tételek";
+  const filterText = knowledgeFilterText(state.knowledgeFilter);
+  el.deckLabel.textContent = filterText ? `${baseLabel} · ${filterText}` : baseLabel;
+}
+
+function setPillActive(pillEl, active) {
+  if (!pillEl) return;
+  pillEl.classList.toggle("is-active", active);
+  pillEl.setAttribute("aria-pressed", active ? "true" : "false");
+}
+
+function updateStudyFilterUi() {
+  setPillActive(el.studyFilterAll, state.knowledgeFilter === null);
+  setPillActive(el.studyCountNoClue, state.knowledgeFilter === 0);
+  setPillActive(el.studyCountPartial, state.knowledgeFilter === 1);
+  setPillActive(el.studyCountKnown, state.knowledgeFilter === 2);
+}
+
+function applyStudyKnowledgeFilter(filter) {
+  if (!state.deck) return;
+  state.knowledgeFilter = filter;
+  updateDeckLabel();
+  updateStudyFilterUi();
+  saveSession();
+
+  const allowed = state.cards.filter(cardMatchesKnowledgeFilter);
+  if (!allowed.length) {
+    setError(el.studyError, "Nincs kártya ebben a kategóriában.");
+    clearCurrentCard();
+    return;
+  }
+
+  setError(el.studyError, "");
+  if (state.current && cardMatchesKnowledgeFilter(state.current)) return;
+  nextCard();
 }
 
 function showScreen(name) {
@@ -394,6 +441,20 @@ function setCurrentCard(card) {
   saveSession();
 }
 
+function clearCurrentCard() {
+  state.current = null;
+  state.showingAnswer = false;
+  el.flashcard.classList.remove("is-flipped");
+  el.ratingRow.hidden = true;
+
+  el.questionText.textContent = "";
+  el.answerText.textContent = "";
+  el.sourceText.textContent = "";
+  el.cardLabel.textContent = "–";
+
+  saveSession();
+}
+
 function flipCard() {
   if (!state.current) return;
   state.showingAnswer = !state.showingAnswer;
@@ -439,6 +500,7 @@ function nextCard() {
   if (!next) {
     const msg = state.knowledgeFilter === null ? "Nincs elérhető kártya." : "Nincs kártya ebben a kategóriában.";
     setError(el.studyError, msg);
+    clearCurrentCard();
     return;
   }
   setError(el.studyError, "");
@@ -529,12 +591,7 @@ async function startStudy(deck, knowledgeFilter, resume) {
 
   state.deck = deck;
   state.knowledgeFilter = knowledgeFilter ?? null;
-  const baseLabel = deck === "beugro" ? "Beugró" : "Tételek";
-  const filterLabel =
-    state.knowledgeFilter === null
-      ? ""
-      : ` · ${state.knowledgeFilter === 0 ? "Nem tudtam" : state.knowledgeFilter === 1 ? "Részben" : "Tudtam"}`;
-  el.deckLabel.textContent = `${baseLabel}${filterLabel}`;
+  updateDeckLabel();
 
   try {
     const raw = await loadDeck(deck);
@@ -560,6 +617,7 @@ async function startStudy(deck, knowledgeFilter, resume) {
 
     showScreen("study");
     updateStudyKnowledgeStats();
+    updateStudyFilterUi();
 
     const resumeCardId = typeof resume?.cardId === "string" ? resume.cardId : null;
     const resumeCard = resumeCardId ? cards.find((c) => c.id === resumeCardId) : null;
@@ -622,6 +680,11 @@ el.btnReset.addEventListener("click", resetProgress);
 document.querySelectorAll("input[name='deck']").forEach((input) => {
   input.addEventListener("change", updateStartKnowledgeStats);
 });
+
+el.studyFilterAll?.addEventListener("click", () => applyStudyKnowledgeFilter(null));
+el.studyCountNoClue?.addEventListener("click", () => applyStudyKnowledgeFilter(state.knowledgeFilter === 0 ? null : 0));
+el.studyCountPartial?.addEventListener("click", () => applyStudyKnowledgeFilter(state.knowledgeFilter === 1 ? null : 1));
+el.studyCountKnown?.addEventListener("click", () => applyStudyKnowledgeFilter(state.knowledgeFilter === 2 ? null : 2));
 
 el.flashcard.addEventListener("click", () => flipCard());
 
